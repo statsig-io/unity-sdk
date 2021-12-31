@@ -1,0 +1,21 @@
+{
+    "name": "com.statsig.unitysdk",
+    "version": "0.1.0",
+    "displayName": "Statsig",
+    "description": "Statsig SDK for Unity projects",
+    "unity": "2019.1",
+    "unityRelease": "0b5",
+    "documentationUrl": "http://docs.statsig.com/client/unity",
+    "changelogUrl": "https://example.com/changelog.html",
+    "licensesUrl": "https://example.com/licensing.html",
+    "dependencies": {
+      "com.unity.nuget.newtonsoft-json": "2.0.0"
+    },
+    "keywords": [
+      ],
+      "author": {
+        "name": "Statsig",
+        "email": "unity@example.com",
+        "url": "https://www.statsig.com"
+      }
+  }
