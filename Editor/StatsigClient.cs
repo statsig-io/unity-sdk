@@ -10,22 +10,23 @@ using Newtonsoft.Json.Linq;
 
 using UnityEngine;
 
-namespace Statsig.UnitySDK
+namespace StatsigUnity
 {
-    public class StatsigClient : IDisposable
+    public class StatsigClient
     {
         const string gatesStoreKey = "statsig::featureGates";
         const string configsStoreKey = "statsig::configs";
 
         readonly StatsigOptions _options;
         internal readonly string _clientKey;
-        bool _disposed;
         RequestDispatcher _requestDispatcher;
         EventLogger _eventLogger;
         StatsigUser _user;
         Dictionary<string, string> _statsigMetadata;
 
         PersistentStore _store;
+
+        GameObject _dummyGameObject;
 
         public StatsigClient(string clientKey, StatsigOptions options = null)
         {
@@ -44,73 +45,51 @@ namespace Statsig.UnitySDK
             _clientKey = clientKey;
             _options = options;
             _requestDispatcher = new RequestDispatcher(_clientKey, _options.ApiUrlBase);
-            _eventLogger = new EventLogger(
-                _requestDispatcher,
-                SDKDetails.GetClientSDKDetails(),
-                Constants.CLIENT_MAX_LOGGER_QUEUE_LENGTH,
-                Constants.CLIENT_MAX_LOGGER_WAIT_TIME_IN_SEC
-            );
+            _dummyGameObject = new GameObject("DetectPlayer");
+            _eventLogger = _dummyGameObject.AddComponent<EventLogger>();
+            _eventLogger.Init(_requestDispatcher);
         }
 
         public async Task Initialize(StatsigUser user)
         {
-            Debug.Log("initializing");
             if (user == null)
             {
                 user = new StatsigUser();
             }
 
             _user = user;
-            _user.statsigEnvironment = _options.StatsigEnvironment.Values;
+            _user.statsigEnvironment = _options.getEnvironmentValues();
             _store = new PersistentStore(user.UserID);
-            Debug.Log("Started fetching now ");
-            var responseJson = await _requestDispatcher.Fetch(
+
+            Task[] tasks;
+            var requestTask = _requestDispatcher.Fetch(
                 "initialize",
                 new Dictionary<string, object>
                 {
                     ["user"] = _user,
                     ["statsigMetadata"] = GetStatsigMetadata(),
-                }
-            );
-            if (responseJson != null)
+                }, 5)
+                .ContinueWith(t =>
+                {
+                    var responseJson = t.Result;
+                    if (responseJson != null)
+                    {
+                        _store.updateUserValues(_user.UserID, responseJson);
+                    }
+                }, TaskScheduler.FromCurrentSynchronizationContext())
+            ;
+            if (_options.InitializeTimeoutMs > 0)
             {
-                _store.updateUserValues(_user.UserID, responseJson);
+                var timeoutTask = Task.Delay(_options.InitializeTimeoutMs);
+                tasks = new Task[] { requestTask, timeoutTask };
             }
-            // StartCoroutine(_requestDispatcher.Fetch(
-            //     "initialize",
-            //     new Dictionary<string, object>
-            //     {
-            //         ["user"] = _user,
-            //         ["statsigMetadata"] = GetStatsigMetadata(),
-            //     },
-            //     (result) =>
-            //     {
-            //         Debug.Log("result is fetched!!");
-            //         Debug.Log(result);
-            //         Debug.Log("response JSON is " + result);
-            //         try
-            //         {
-            //             var response = JsonConvert.DeserializeObject<UserValues>(result);
-            //             if (response == null)
-            //             {
-            //                 Debug.Log("returned NULL response");
-            //                 return;
-            //             }
-            //             Debug.Log("returned response");
-            //             _values = response;
-            //         }
-            //         catch (Exception e)
-            //         {
-            //             Debug.Log(e.Message);
-            //         }
-            //     }
-            // ));
-        }
+            else
+            {
+                tasks = new Task[] { requestTask };
+            }
 
-        public void Shutdown()
-        {
-            _eventLogger.Shutdown();
-            ((IDisposable)this).Dispose();
+            var completed = await Task.WhenAny(tasks);
+            await completed;
         }
 
         public bool CheckGate(string gateName)
@@ -125,7 +104,7 @@ namespace Statsig.UnitySDK
                     gate = new FeatureGate(gateName, false, "");
                 }
             }
-            _eventLogger.Enqueue(EventLog.CreateGateExposureLog(_user, gateName, gate.Value, gate.RuleID, gate.SecondaryExposures));
+            _eventLogger.LogGateExposure(_user, gateName, gate.Value, gate.RuleID, gate.SecondaryExposures);
             return gate.Value;
         }
 
@@ -141,7 +120,7 @@ namespace Statsig.UnitySDK
                     config = new DynamicConfig(configName);
                 }
             }
-            _eventLogger.Enqueue(EventLog.CreateConfigExposureLog(_user, configName, config.RuleID, config.SecondaryExposures));
+            _eventLogger.LogConfigExposure(_user, configName, config.RuleID, config.SecondaryExposures);
             return config;
         }
 
@@ -180,15 +159,17 @@ namespace Statsig.UnitySDK
             LogEventHelper(eventName, value, metadata);
         }
 
-        void IDisposable.Dispose()
+        public void LogEvent(
+            string eventName,
+            IReadOnlyDictionary<string, string> metadata)
         {
-            if (_disposed)
-            {
-                throw new ObjectDisposedException("StatsigClient");
-            }
+            LogEventHelper(eventName, null, metadata);
+        }
 
-            _eventLogger.ForceFlush();
-            _disposed = true;
+        public async Task Shutdown()
+        {
+            UnityEngine.Object.Destroy(_dummyGameObject);
+            await _eventLogger.Shutdown();
         }
 
         #region Private helpers
@@ -232,29 +213,18 @@ namespace Statsig.UnitySDK
         {
             if (_statsigMetadata == null)
             {
-                string systemName = "unknown";
-                // if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-                // {
-                //     systemName = "Mac OS";
-                // }
-                // else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                // {
-                //     systemName = "Windows";
-                // }
-                // else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                // {
-                //     systemName = "Linux";
-                // }
                 _statsigMetadata = new Dictionary<string, string>
                 {
                     ["sessionID"] = Guid.NewGuid().ToString(),
-                    // ["stableID"] = PersistentStore.StableID,
-                    // ["locale"] = CultureInfo.CurrentUICulture.Name,
-                    // ["appVersion"] = Assembly.GetEntryAssembly().GetName().Version.ToString(),
-                    // ["systemVersion"] = Environment.OSVersion.Version.ToString(),
-                    // ["systemName"] = systemName,
-                    ["sdkType"] = SDKDetails.GetClientSDKDetails().SDKType,
-                    ["sdkVersion"] = SDKDetails.GetClientSDKDetails().SDKVersion,
+                    ["stableID"] = _store.stableID,
+                    ["language"] = Application.systemLanguage.ToString(),
+                    ["platform"] = Application.platform.ToString(),
+                    ["appVersion"] = Application.version,
+                    ["operatingSystem"] = SystemInfo.operatingSystem,
+                    ["deviceModel"] = SystemInfo.deviceModel,
+                    ["batteryLevel"] = SystemInfo.batteryLevel.ToString(),
+                    ["sdkType"] = SDKDetails.SDKType,
+                    ["sdkVersion"] = SDKDetails.SDKVersion,
                 };
             }
             return _statsigMetadata;

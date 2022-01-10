@@ -1,40 +1,100 @@
-﻿using System.Timers;
+﻿using System;
+using System.Timers;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using UnityEngine;
 
-namespace Statsig.UnitySDK
+namespace StatsigUnity
 {
-    public class EventLogger
+    public class EventLogger : MonoBehaviour, IDisposable
     {
-        int _maxQueueLength;
-        SDKDetails _sdkDetails;
-        Timer _flushTimer;
         List<EventLog> _eventLogQueue;
         RequestDispatcher _dispatcher;
         HashSet<string> _errorsLogged;
+        HashSet<string> _loggedExposures = new HashSet<string>();
 
-        public EventLogger(RequestDispatcher dispatcher, SDKDetails sdkDetails, int maxQueueLength = 100, int maxThresholdSecs = 60)
+        void Awake()
         {
-            _sdkDetails = sdkDetails;
-            _maxQueueLength = maxQueueLength;
-            _dispatcher = dispatcher;
-
             _eventLogQueue = new List<EventLog>();
             _errorsLogged = new HashSet<string>();
-
-            _flushTimer = new Timer
-            {
-                Interval = maxThresholdSecs * 1000,
-                Enabled = true,
-                AutoReset = true,
-            };
-            _flushTimer.Elapsed += async (sender, e) => await FlushEvents();
-            throw new System.Exception("fix timer");
         }
 
-        public void Enqueue(EventLog entry)
+        void OnApplicationFocus(bool hasFocus)
+        {
+            if (!hasFocus)
+            {
+                FlushEvents(false);
+            }
+        }
+
+        void OnApplicationQuit()
+        {
+            CancelInvoke();
+            FlushEvents(true);
+        }
+
+        internal void Init(RequestDispatcher dispatcher)
+        {
+            _dispatcher = dispatcher;
+            InvokeRepeating("FlushEvents", Constants.CLIENT_MAX_LOGGER_WAIT_TIME_IN_SEC, Constants.CLIENT_MAX_LOGGER_WAIT_TIME_IN_SEC);
+        }
+
+        internal void LogGateExposure(
+            StatsigUser user,
+            string gateName,
+            bool gateValue,
+            string ruleID,
+            List<IReadOnlyDictionary<string, string>> secondaryExposures)
+        {
+            var dedupeKey = string.Format("gate:{0}:{1}:{2}:{3}", user.UserID ?? "", gateName, ruleID, gateValue ? "true" : "false");
+            if (_loggedExposures.Contains(dedupeKey))
+            {
+                return;
+            }
+            _loggedExposures.Add(dedupeKey);
+            var exposure = new EventLog
+            {
+                User = user,
+                EventName = Constants.GATE_EXPOSURE_EVENT,
+                Metadata = new Dictionary<string, string>
+                {
+                    ["gate"] = gateName,
+                    ["gateValue"] = gateValue ? "true" : "false",
+                    ["ruleID"] = ruleID
+                },
+                SecondaryExposures = secondaryExposures,
+            };
+            Enqueue(exposure);
+        }
+
+        internal void LogConfigExposure(
+            StatsigUser user,
+            string configName,
+            string ruleID,
+            List<IReadOnlyDictionary<string, string>> secondaryExposures)
+        {
+            var dedupeKey = string.Format("config:{0}:{1}:{2}", user.UserID ?? "", configName, ruleID);
+            if (_loggedExposures.Contains(dedupeKey))
+            {
+                return;
+            }
+            _loggedExposures.Add(dedupeKey);
+            var exposure = new EventLog
+            {
+                User = user,
+                EventName = Constants.CONFIG_EXPOSURE_EVENT,
+                Metadata = new Dictionary<string, string>
+                {
+                    ["config"] = configName,
+                    ["ruleID"] = ruleID,
+                },
+                SecondaryExposures = secondaryExposures,
+            };
+            Enqueue(exposure);
+        }
+
+        internal void Enqueue(EventLog entry)
         {
             if (entry.IsErrorLog)
             {
@@ -49,53 +109,52 @@ namespace Statsig.UnitySDK
             }
 
             _eventLogQueue.Add(entry);
-            if (_eventLogQueue.Count >= _maxQueueLength)
+            if (_eventLogQueue.Count >= Constants.CLIENT_MAX_LOGGER_QUEUE_LENGTH)
             {
-                ForceFlush();
+                FlushEvents(false);
             }
         }
 
-        internal void ForceFlush()
+        internal async Task Shutdown()
         {
-            var task = FlushEvents();
+            CancelInvoke();
+            await FlushEvents(true);
+        }
+
+        void IDisposable.Dispose()
+        {
+            CancelInvoke();
+            var task = FlushEvents(true);
             task.Wait();
         }
 
-        async Task FlushEvents()
+        async Task FlushEvents(bool shutdown)
         {
-            Debug.Log(_eventLogQueue.Count);
             if (_eventLogQueue.Count == 0)
             {
                 return;
             }
-            Debug.Log(_eventLogQueue);
             var snapshot = _eventLogQueue;
             _eventLogQueue = new List<EventLog>();
             _errorsLogged.Clear();
 
             var body = new Dictionary<string, object>
             {
-                ["statsigMetadata"] = GetStatsigMetadata(),
+                ["statsigMetadata"] = new Dictionary<string, string>
+                {
+                    ["sessionID"] = Guid.NewGuid().ToString(),
+                    ["language"] = Application.systemLanguage.ToString(),
+                    ["platform"] = Application.platform.ToString(),
+                    ["appVersion"] = Application.version,
+                    ["operatingSystem"] = SystemInfo.operatingSystem,
+                    ["deviceModel"] = SystemInfo.deviceModel,
+                    ["batteryLevel"] = SystemInfo.batteryLevel.ToString(),
+                    ["sdkType"] = SDKDetails.SDKType,
+                    ["sdkVersion"] = SDKDetails.SDKVersion,
+                },
                 ["events"] = snapshot
             };
-
-            await _dispatcher.Fetch("log_event", body, 5, 1);
-        }
-
-        IReadOnlyDictionary<string, string> GetStatsigMetadata()
-        {
-            return new Dictionary<string, string>
-            {
-                ["sdkType"] = _sdkDetails.SDKType,
-                ["sdkVersion"] = _sdkDetails.SDKVersion,
-            };
-        }
-
-        public void Shutdown()
-        {
-            _flushTimer.Stop();
-            _flushTimer.Dispose();
-            ForceFlush();
+            await _dispatcher.Fetch("log_event", body, shutdown ? 0 : 5, 1);
         }
     }
 }

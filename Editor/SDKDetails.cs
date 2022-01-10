@@ -1,50 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Statsig.UnitySDK
+namespace StatsigUnity
 {
-    public class SDKDetails
+    public static class SDKDetails
     {
-        private static SDKDetails _clientDetails;
-        private static SDKDetails _serverDetails;
-
-        internal string SDKType = null;
-        internal string SDKVersion = null;
-
-        internal SDKDetails(string type)
-        {
-            SDKType = type;
-            SDKVersion = GetType().Assembly.GetName().Version.ToString();
-        }
-
-        internal IReadOnlyDictionary<string, string> StatsigMetadata
+        internal static string SDKType = "unity";
+        internal static string SDKVersion = "0.1.0";
+        internal static IReadOnlyDictionary<string, string> StatsigMetadata
         {
             get
             {
                 return new Dictionary<string, string>
                 {
-                    ["sdkType"] = SDKType,
-                    ["sdkVersion"] = SDKVersion
+                    ["sdkType"] = SDKDetails.SDKType,
+                    ["sdkVersion"] = SDKDetails.SDKVersion,
                 };
             }
-        }
-
-        internal static SDKDetails GetClientSDKDetails()
-        {
-            if (_clientDetails == null)
-            {
-                _clientDetails = new SDKDetails("dotnet-client");
-            }
-            return _clientDetails;
-        }
-
-        internal static SDKDetails GetServerSDKDetails()
-        {
-            if (_serverDetails == null)
-            {
-                _serverDetails = new SDKDetails("dotnet-server");
-            }
-            return _serverDetails;
         }
     }
 }

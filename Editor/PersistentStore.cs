@@ -8,19 +8,23 @@ using Newtonsoft.Json.Linq;
 
 using UnityEngine;
 
-namespace Statsig.UnitySDK
+namespace StatsigUnity
 {
     internal class PersistentStore
     {
         const string stableIDKey = "statsig::stableID";
         const string userValuesKeyPrefix = "statsig::userValues-";
-        const string logEventsKey = "statsig::logEvents"; // TODO: use this to cache events
+        const string logEventsKey = "statsig::logEvents"; // TODO: use this
 
         internal string stableID;
-        private UserValues _values = new UserValues();
+        Dictionary<string, FeatureGate> _gates;
+        Dictionary<string, DynamicConfig> _configs;
 
         internal PersistentStore(string userID)
         {
+            _gates = new Dictionary<string, FeatureGate>();
+            _configs = new Dictionary<string, DynamicConfig>();
+
             stableID = PlayerPrefs.GetString(stableIDKey, null);
             if (stableID == null)
             {
@@ -29,24 +33,14 @@ namespace Statsig.UnitySDK
             }
 
             var cachedValues = PlayerPrefs.GetString(getUserValueKey(userID), null);
-            if (cachedValues != null)
+
+            try
             {
-                try
-                {
-                    var values = JsonConvert.DeserializeObject<UserValues>(cachedValues);
-                    if (values == null)
-                    {
-                        PlayerPrefs.DeleteKey(getUserValueKey(userID));
-                    }
-                    else
-                    {
-                        _values = values;
-                    }
-                }
-                catch (Exception)
-                {
-                    PlayerPrefs.DeleteKey(getUserValueKey(userID));
-                }
+                ParseAndSaveInitResponse(cachedValues);
+            }
+            catch (Exception)
+            {
+                PlayerPrefs.DeleteKey(getUserValueKey(userID));
             }
 
             PlayerPrefs.Save();
@@ -56,7 +50,7 @@ namespace Statsig.UnitySDK
         internal FeatureGate? getGate(string gateName)
         {
             FeatureGate gate;
-            if (!_values.FeatureGates.TryGetValue(gateName, out gate))
+            if (!_gates.TryGetValue(gateName, out gate))
             {
                 return null;
             }
@@ -67,7 +61,7 @@ namespace Statsig.UnitySDK
         internal DynamicConfig? getConfig(string configName)
         {
             DynamicConfig config;
-            if (!_values.DynamicConfigs.TryGetValue(configName, out config))
+            if (!_configs.TryGetValue(configName, out config))
             {
                 return null;
             }
@@ -78,22 +72,44 @@ namespace Statsig.UnitySDK
         {
             try
             {
-                var parsed = JsonConvert.DeserializeObject<UserValues>(values);
-                if (parsed != null)
-                {
-                    _values = parsed;
-                    PlayerPrefs.SetString(getUserValueKey(userID), values);
-                    PlayerPrefs.Save();
-                }
+                ParseAndSaveInitResponse(values);
+                PlayerPrefs.SetString(getUserValueKey(userID), values);
+                PlayerPrefs.Save();
             }
-            catch (Exception)
+            catch (Exception e)
             {
             }
         }
 
-        private string getUserValueKey(string userID)
+        string getUserValueKey(string userID)
         {
             return userValuesKeyPrefix + userID ?? "";
+        }
+
+        void ParseAndSaveInitResponse(string responseJson)
+        {
+            var gates = new Dictionary<string, FeatureGate>();
+            var configs = new Dictionary<string, DynamicConfig>();
+            var response = JsonConvert.DeserializeObject<Dictionary<string, JToken>>(responseJson);
+            JToken objVal;
+            if (response.TryGetValue("feature_gates", out objVal))
+            {
+                var gateMap = objVal.ToObject<Dictionary<string, object>>() ?? new Dictionary<string, object>();
+                foreach (var kv in gateMap)
+                {
+                    gates[kv.Key] = FeatureGate.FromJObject(kv.Key, kv.Value as JObject);
+                }
+                _gates = gates;
+            }
+            if (response.TryGetValue("dynamic_configs", out objVal))
+            {
+                var configMap = objVal.ToObject<Dictionary<string, object>>() ?? new Dictionary<string, object>();
+                foreach (var kv in configMap)
+                {
+                    configs[kv.Key] = DynamicConfig.FromJObject(kv.Key, kv.Value as JObject);
+                }
+                _configs = configs;
+            }
         }
     }
 }

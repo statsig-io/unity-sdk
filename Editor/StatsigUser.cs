@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace Statsig.UnitySDK
+namespace StatsigUnity
 {
     public class StatsigUser
     {

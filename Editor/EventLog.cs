@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using Newtonsoft.Json;
 
-namespace Statsig.UnitySDK
+namespace StatsigUnity
 {
     public class EventLog
     {
@@ -36,46 +36,6 @@ namespace Statsig.UnitySDK
 
         public EventLog()
         {
-        }
-
-        internal static EventLog CreateGateExposureLog(
-            StatsigUser user,
-            string gateName,
-            bool gateValue,
-            string ruleID,
-            List<IReadOnlyDictionary<string, string>> secondaryExposures)
-        {
-            return new EventLog
-            {
-                User = user,
-                EventName = Constants.GATE_EXPOSURE_EVENT,
-                Metadata = new Dictionary<string, string>
-                {
-                    ["gate"] = gateName,
-                    ["gateValue"] = gateValue ? "true" : "false",
-                    ["ruleID"] = ruleID
-                },
-                SecondaryExposures = secondaryExposures,
-            };
-        }
-
-        internal static EventLog CreateConfigExposureLog(
-            StatsigUser user,
-            string configName,
-            string ruleID,
-            List<IReadOnlyDictionary<string, string>> secondaryExposures)
-        {
-            return new EventLog
-            {
-                User = user,
-                EventName = Constants.CONFIG_EXPOSURE_EVENT,
-                Metadata = new Dictionary<string, string>
-                {
-                    ["config"] = configName,
-                    ["ruleID"] = ruleID,
-                },
-                SecondaryExposures = secondaryExposures,
-            };
         }
 
         internal static EventLog CreateErrorLog(string eventName, string errorMessage = null)

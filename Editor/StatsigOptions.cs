@@ -1,29 +1,37 @@
 ﻿using System;
+using System.Collections.Generic;
 
-namespace Statsig.UnitySDK
+namespace StatsigUnity
 {
+    public enum EnvironmentTier
+    {
+        Production,
+        Development,
+        Staging,
+    }
+
     public class StatsigOptions
     {
-        public string ApiUrlBase { get; }
-        public StatsigEnvironment StatsigEnvironment { get; }
+        public string ApiUrlBase { get; set; }
+        public EnvironmentTier? EnvironmentTier { get; set; }
+
+        public int InitializeTimeoutMs { get; set; }
 
         public StatsigOptions()
         {
             ApiUrlBase = Constants.DEFAULT_API_URL_BASE;
-            StatsigEnvironment = new StatsigEnvironment();
+            EnvironmentTier = null;
+            InitializeTimeoutMs = Constants.DEFAULT_INITIALIZE_TIMEOUT_MS;
         }
 
-        public StatsigOptions(StatsigEnvironment environment = null)
+        internal Dictionary<string, string> getEnvironmentValues()
         {
-            ApiUrlBase = Constants.DEFAULT_API_URL_BASE;
-            StatsigEnvironment = environment ?? new StatsigEnvironment();
-        }
-
-        public StatsigOptions(string apiUrlBase = null, StatsigEnvironment environment = null)
-        {
-            ApiUrlBase = string.IsNullOrWhiteSpace(apiUrlBase) ?
-                Constants.DEFAULT_API_URL_BASE : apiUrlBase;
-            StatsigEnvironment = environment ?? new StatsigEnvironment();
+            var values = new Dictionary<string, string>();
+            if (EnvironmentTier != null)
+            {
+                values["tier"] = EnvironmentTier.ToString().ToLowerInvariant();
+            }
+            return values;
         }
     }
 }

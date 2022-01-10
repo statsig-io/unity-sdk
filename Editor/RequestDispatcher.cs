@@ -3,13 +3,16 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Cache;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using UnityEngine;
 
-namespace Statsig.UnitySDK
+namespace StatsigUnity
 {
     public class RequestDispatcher
     {
@@ -17,6 +20,7 @@ namespace Statsig.UnitySDK
         private static readonly HashSet<int> retryCodes = new HashSet<int> { 408, 500, 502, 503, 504, 522, 524, 599 };
         public string Key { get; }
         public string ApiBaseUrl { get; }
+        private HttpClient _client;
         public RequestDispatcher(string key, string apiBaseUrl = null)
         {
             if (string.IsNullOrWhiteSpace(key))
@@ -30,63 +34,48 @@ namespace Statsig.UnitySDK
 
             Key = key;
             ApiBaseUrl = apiBaseUrl;
+
+            _client = new HttpClient();
+            _client.DefaultRequestHeaders.Add("STATSIG-API-KEY", Key);
+            _client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         }
 
-        public async Task<string> Fetch(
+#nullable enable
+        public async Task<string?> Fetch(
             string endpoint,
             IReadOnlyDictionary<string, object> body,
             int retries = 0,
             int backoff = 1)
         {
-            Debug.Log("fetching");
             try
             {
-                var url = ApiBaseUrl.EndsWith("/") ? ApiBaseUrl + endpoint : ApiBaseUrl + "/" + endpoint;
-                var request = WebRequest.CreateHttp(url);
-                request.Method = "POST";
-                request.ContentType = "application/json";
-                request.Headers.Add("STATSIG-API-KEY", Key);
-                request.Headers.Add("STATSIG-CLIENT-TIME",
+                _client.DefaultRequestHeaders.Add("STATSIG-CLIENT-TIME",
                     (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalMilliseconds.ToString());
 
                 var jsonSettings = new JsonSerializerSettings
                 {
                     NullValueHandling = NullValueHandling.Ignore
                 };
-                using (var writer = new StreamWriter(request.GetRequestStream()))
-                {
-                    var bodyJson = JsonConvert.SerializeObject(body, Formatting.None, jsonSettings);
-                    writer.Write(bodyJson);
-                }
-
-                var response = (HttpWebResponse)await request.GetResponseAsync();
+                var url = ApiBaseUrl.EndsWith("/") ? ApiBaseUrl + endpoint : ApiBaseUrl + "/" + endpoint;
+                var json = JsonConvert.SerializeObject(body, Formatting.None, jsonSettings);
+                var data = new StringContent(json, Encoding.UTF8, "application/json");
+                var response = await _client.PostAsync(url, data);
                 if (response == null)
                 {
                     return null;
                 }
-                if (response.StatusCode == HttpStatusCode.Accepted ||
-                response.StatusCode == HttpStatusCode.OK)
+                if (response.StatusCode == HttpStatusCode.Accepted || response.StatusCode == HttpStatusCode.OK)
                 {
-                    using (var reader = new StreamReader(response.GetResponseStream()))
-                    {
-                        Debug.Log("fetching done!");
-                        return reader.ReadToEnd();
-                    }
+                    var result = response.Content.ReadAsStringAsync().Result;
+                    return result;
                 }
                 else if (retries > 0 && retryCodes.Contains((int)response.StatusCode))
                 {
                     return await retry(endpoint, body, retries, backoff);
                 }
-
             }
             catch (Exception e)
             {
-                Debug.Log(e);
-                Debug.Log(e.Message);
-                if (retries > 0)
-                {
-                    return await retry(endpoint, body, retries, backoff);
-                }
             }
             return null;
         }
