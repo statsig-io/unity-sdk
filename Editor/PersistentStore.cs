@@ -46,7 +46,6 @@ namespace StatsigUnity
             PlayerPrefs.Save();
         }
 
-#nullable enable
         internal FeatureGate? getGate(string gateName)
         {
             FeatureGate gate;
@@ -57,7 +56,6 @@ namespace StatsigUnity
             return gate;
         }
 
-#nullable enable
         internal DynamicConfig? getConfig(string configName)
         {
             DynamicConfig config;
