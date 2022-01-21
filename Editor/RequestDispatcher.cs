@@ -40,7 +40,7 @@ namespace StatsigUnity
             _client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         }
 
-        public async Task<string?> Fetch(
+        public async Task<string> Fetch(
             string endpoint,
             IReadOnlyDictionary<string, object> body,
             int retries = 0,

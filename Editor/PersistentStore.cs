@@ -46,7 +46,7 @@ namespace StatsigUnity
             PlayerPrefs.Save();
         }
 
-        internal FeatureGate? getGate(string gateName)
+        internal FeatureGate getGate(string gateName)
         {
             FeatureGate gate;
             if (!_gates.TryGetValue(gateName, out gate))
@@ -56,7 +56,7 @@ namespace StatsigUnity
             return gate;
         }
 
-        internal DynamicConfig? getConfig(string configName)
+        internal DynamicConfig getConfig(string configName)
         {
             DynamicConfig config;
             if (!_configs.TryGetValue(configName, out config))
