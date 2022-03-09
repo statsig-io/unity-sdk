@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Timers;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -13,6 +14,8 @@ namespace StatsigUnity
         RequestDispatcher _dispatcher;
         HashSet<string> _errorsLogged;
         HashSet<string> _loggedExposures = new HashSet<string>();
+
+        IEnumerator _flushCoroutine;
 
         void Awake()
         {
@@ -30,14 +33,15 @@ namespace StatsigUnity
 
         void OnApplicationQuit()
         {
-            CancelInvoke();
+            StopCoroutine(_flushCoroutine);
             FlushEvents(true);
         }
 
         internal void Init(RequestDispatcher dispatcher)
         {
             _dispatcher = dispatcher;
-            InvokeRepeating("FlushEvents", Constants.CLIENT_MAX_LOGGER_WAIT_TIME_IN_SEC, Constants.CLIENT_MAX_LOGGER_WAIT_TIME_IN_SEC);
+            _flushCoroutine = PeriodicFlush(Constants.CLIENT_MAX_LOGGER_WAIT_TIME_IN_SEC);
+            StartCoroutine(_flushCoroutine);
         }
 
         internal void LogGateExposure(
@@ -117,15 +121,24 @@ namespace StatsigUnity
 
         internal async Task Shutdown()
         {
-            CancelInvoke();
+            StopCoroutine(_flushCoroutine);
             await FlushEvents(true);
         }
 
         void IDisposable.Dispose()
         {
-            CancelInvoke();
+            StopCoroutine(_flushCoroutine);
             var task = FlushEvents(true);
             task.Wait();
+        }
+
+        IEnumerator PeriodicFlush(int delay)
+        {
+            while (true)
+            {
+                yield return new WaitForSeconds(delay);
+                FlushEvents(false);
+            }
         }
 
         async Task FlushEvents(bool shutdown)
