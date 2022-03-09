@@ -48,6 +48,7 @@ namespace StatsigUnity
             _dummyGameObject = new GameObject("DetectPlayer");
             _eventLogger = _dummyGameObject.AddComponent<EventLogger>();
             _eventLogger.Init(_requestDispatcher);
+            UnityEngine.Object.DontDestroyOnLoad(_dummyGameObject);
         }
 
         public async Task Initialize(StatsigUser user)
