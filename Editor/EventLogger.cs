@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Timers;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -13,7 +12,7 @@ namespace StatsigUnity
         List<EventLog> _eventLogQueue;
         RequestDispatcher _dispatcher;
         HashSet<string> _errorsLogged;
-        HashSet<string> _loggedExposures = new HashSet<string>();
+        Dictionary<string, double> _loggedExposures = new Dictionary<string, double>();
 
         IEnumerator _flushCoroutine;
 
@@ -44,6 +43,11 @@ namespace StatsigUnity
             StartCoroutine(_flushCoroutine);
         }
 
+        internal void ResetExposureDedupeKeys()
+        {
+            _loggedExposures = new Dictionary<string, double>();
+        }
+
         internal void LogGateExposure(
             StatsigUser user,
             string gateName,
@@ -52,11 +56,10 @@ namespace StatsigUnity
             List<IReadOnlyDictionary<string, string>> secondaryExposures)
         {
             var dedupeKey = string.Format("gate:{0}:{1}:{2}:{3}", user.UserID ?? "", gateName, ruleID, gateValue ? "true" : "false");
-            if (_loggedExposures.Contains(dedupeKey))
+            if (!ShouldLogExposure(dedupeKey))
             {
                 return;
             }
-            _loggedExposures.Add(dedupeKey);
             var exposure = new EventLog
             {
                 User = user,
@@ -79,11 +82,10 @@ namespace StatsigUnity
             List<IReadOnlyDictionary<string, string>> secondaryExposures)
         {
             var dedupeKey = string.Format("config:{0}:{1}:{2}", user.UserID ?? "", configName, ruleID);
-            if (_loggedExposures.Contains(dedupeKey))
+            if (!ShouldLogExposure(dedupeKey))
             {
                 return;
             }
-            _loggedExposures.Add(dedupeKey);
             var exposure = new EventLog
             {
                 User = user,
@@ -98,20 +100,22 @@ namespace StatsigUnity
             Enqueue(exposure);
         }
 
-        internal void Enqueue(EventLog entry)
+        bool ShouldLogExposure(string dedupeKey)
         {
-            if (entry.IsErrorLog)
+            var now = DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalMilliseconds;
+            if (_loggedExposures.TryGetValue(dedupeKey, out double lastTime))
             {
-                if (_errorsLogged.Contains(entry.ErrorKey))
+                if (lastTime >= now - 600 * 1000)
                 {
-                    return;
-                }
-                else
-                {
-                    _errorsLogged.Add(entry.ErrorKey);
+                    return false;
                 }
             }
+            _loggedExposures[dedupeKey] = now;
+            return true;
+        }
 
+        internal void Enqueue(EventLog entry)
+        {
             _eventLogQueue.Add(entry);
             if (_eventLogQueue.Count >= Constants.CLIENT_MAX_LOGGER_QUEUE_LENGTH)
             {

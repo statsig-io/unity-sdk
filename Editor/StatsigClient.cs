@@ -128,6 +128,7 @@ namespace StatsigUnity
         public async Task UpdateUser(StatsigUser newUser)
         {
             _statsigMetadata = null;
+            _eventLogger.ResetExposureDedupeKeys();
             await Initialize(newUser);
         }
 
