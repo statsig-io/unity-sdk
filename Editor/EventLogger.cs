@@ -100,6 +100,33 @@ namespace StatsigUnity
             Enqueue(exposure);
         }
 
+        internal void LogLayerExposure(
+            StatsigUser user,
+            string layerName,
+            string ruleID,
+            string allocatedExperiment,
+            List<IReadOnlyDictionary<string, string>> secondaryExposures)
+        {
+            var dedupeKey = string.Format("config:{0}:{1}:{2}:{3}", user.UserID ?? "", layerName, ruleID, allocatedExperiment);
+            if (!ShouldLogExposure(dedupeKey))
+            {
+                return;
+            }
+            var exposure = new EventLog
+            {
+                User = user,
+                EventName = Constants.LAYER_EXPOSURE_EVENT,
+                Metadata = new Dictionary<string, string>
+                {
+                    ["config"] = layerName,
+                    ["ruleID"] = ruleID,
+                    ["allocatedExperiment"] = allocatedExperiment
+                },
+                SecondaryExposures = secondaryExposures,
+            };
+            Enqueue(exposure);
+        }
+
         bool ShouldLogExposure(string dedupeKey)
         {
             var now = DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalMilliseconds;

@@ -11,5 +11,6 @@ namespace StatsigUnity
         public static int CLIENT_MAX_LOGGER_WAIT_TIME_IN_SEC = 60;
         public static string GATE_EXPOSURE_EVENT = "statsig::gate_exposure";
         public static string CONFIG_EXPOSURE_EVENT = "statsig::config_exposure";
+        public static string LAYER_EXPOSURE_EVENT = "statsig::layer_exposure";
     }
 }

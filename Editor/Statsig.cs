@@ -43,6 +43,12 @@ namespace StatsigUnity
             return _client.GetConfig(experimentName);
         }
 
+        public static Layer GetLayer(string layerName)
+        {
+            EnsureInitialized();
+            return _client.GetLayer(layerName);
+        }
+
         public static void LogEvent(
             string eventName,
             string value = null,
