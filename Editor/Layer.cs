@@ -8,7 +8,7 @@ namespace StatsigUnity
     public class Layer
     {
         [JsonProperty("name")]
-        public string ConfigName { get; }
+        public string Name { get; }
 
         [JsonProperty("rule_id")]
         public string RuleID { get; }
@@ -36,9 +36,9 @@ namespace StatsigUnity
             }
         }
 
-        public Layer(string configName = null, IReadOnlyDictionary<string, JToken> value = null, string ruleID = null, string allocatedExperiment = null, List<IReadOnlyDictionary<string, string>> secondaryExposures = null)
+        public Layer(string name = null, IReadOnlyDictionary<string, JToken> value = null, string ruleID = null, string allocatedExperiment = null, List<IReadOnlyDictionary<string, string>> secondaryExposures = null)
         {
-            ConfigName = configName ?? "";
+            Name = name ?? "";
             Value = value ?? new Dictionary<string, JToken>();
             RuleID = ruleID ?? "";
             AllocatedExperiment = allocatedExperiment ?? "";
