@@ -125,6 +125,22 @@ namespace StatsigUnity
             return config;
         }
 
+        public Layer GetLayer(string layerName)
+        {
+            var hashedName = GetNameHash(layerName);
+            var config = _store.getLayer(hashedName);
+            if (config == null)
+            {
+                config = _store.getLayer(layerName);
+                if (config == null)
+                {
+                    config = new Layer(layerName);
+                }
+            }
+            _eventLogger.LogLayerExposure(_user, layerName, config.RuleID, config.AllocatedExperiment, config.SecondaryExposures);
+            return config;
+        }
+
         public async Task UpdateUser(StatsigUser newUser)
         {
             _statsigMetadata = null;
