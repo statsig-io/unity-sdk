@@ -4,10 +4,8 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-
 using UnityEngine;
 
 namespace StatsigUnity
@@ -32,16 +30,21 @@ namespace StatsigUnity
         {
             if (string.IsNullOrWhiteSpace(clientKey))
             {
-                throw new ArgumentException("clientKey cannot be empty.", "clientKey");
+                throw new ArgumentException("clientKey cannot be empty.", nameof(clientKey));
             }
+
             if (!clientKey.StartsWith("client-") && !clientKey.StartsWith("test-"))
             {
-                throw new ArgumentException("Invalid key provided. Please check your Statsig console to get the right server key.", "serverSecret");
+                throw new ArgumentException(
+                    "Invalid key provided. Please check your Statsig console to get the right server key.",
+                    "serverSecret");
             }
+
             if (options == null)
             {
                 options = new StatsigOptions();
             }
+
             _clientKey = clientKey;
             _options = options;
             _requestDispatcher = new RequestDispatcher(_clientKey, _options.ApiUrlBase);
@@ -64,21 +67,21 @@ namespace StatsigUnity
 
             Task[] tasks;
             var requestTask = _requestDispatcher.Fetch(
-                "initialize",
-                new Dictionary<string, object>
-                {
-                    ["user"] = _user,
-                    ["statsigMetadata"] = GetStatsigMetadata(),
-                }, 5)
-                .ContinueWith(t =>
-                {
-                    var responseJson = t.Result;
-                    if (responseJson != null)
+                        "initialize",
+                        new Dictionary<string, object>
+                        {
+                            ["user"] = _user,
+                            ["statsigMetadata"] = GetStatsigMetadata(),
+                        }, 5)
+                    .ContinueWith(t =>
                     {
-                        _store.updateUserValues(_user.UserID, responseJson);
-                    }
-                }, TaskScheduler.FromCurrentSynchronizationContext())
-            ;
+                        var responseJson = t.Result;
+                        if (responseJson != null)
+                        {
+                            _store.updateUserValues(_user.UserID, responseJson);
+                        }
+                    }, TaskScheduler.FromCurrentSynchronizationContext())
+                ;
             if (_options.InitializeTimeoutMs > 0)
             {
                 var timeoutTask = Task.Delay(_options.InitializeTimeoutMs);
@@ -105,6 +108,7 @@ namespace StatsigUnity
                     gate = new FeatureGate(gateName, false, "");
                 }
             }
+
             _eventLogger.LogGateExposure(_user, gateName, gate.Value, gate.RuleID, gate.SecondaryExposures);
             return gate.Value;
         }
@@ -112,15 +116,10 @@ namespace StatsigUnity
         public DynamicConfig GetConfig(string configName)
         {
             var hashedName = GetNameHash(configName);
-            var config = _store.getConfig(hashedName);
-            if (config == null)
-            {
-                config = _store.getConfig(configName);
-                if (config == null)
-                {
-                    config = new DynamicConfig(configName);
-                }
-            }
+            var config = _store.getConfig(hashedName)
+                         ?? _store.getConfig(configName)
+                         ?? new DynamicConfig(configName);
+
             _eventLogger.LogConfigExposure(_user, configName, config.RuleID, config.SecondaryExposures);
             return config;
         }
@@ -128,17 +127,34 @@ namespace StatsigUnity
         public Layer GetLayer(string layerName)
         {
             var hashedName = GetNameHash(layerName);
-            var config = _store.getLayer(hashedName);
-            if (config == null)
+            var value = _store.getLayer(hashedName)
+                        ?? _store.getLayer(layerName)
+                        ?? new Layer(layerName);
+
+            value.OnExposure = delegate(Layer layer, string parameterName)
             {
-                config = _store.getLayer(layerName);
-                if (config == null)
+                var allocatedExperiment = "";
+                var isExplicit = layer.ExplicitParameters.Contains(parameterName);
+                var exposures = layer.UndelegatedSecondaryExposures;
+
+                if (isExplicit)
                 {
-                    config = new Layer(layerName);
+                    allocatedExperiment = layer.AllocatedExperimentName;
+                    exposures = layer.SecondaryExposures;
                 }
-            }
-            _eventLogger.LogLayerExposure(_user, layerName, config.RuleID, config.AllocatedExperiment, config.SecondaryExposures);
-            return config;
+
+                _eventLogger.LogLayerExposure(
+                    _user,
+                    layerName,
+                    layer.RuleID,
+                    allocatedExperiment,
+                    parameterName,
+                    isExplicit,
+                    exposures
+                );
+            };
+
+            return value;
         }
 
         public async Task UpdateUser(StatsigUser newUser)
@@ -245,6 +261,7 @@ namespace StatsigUnity
                     ["sdkVersion"] = SDKDetails.SDKVersion,
                 };
             }
+
             return _statsigMetadata;
         }
 

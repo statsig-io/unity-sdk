@@ -50,31 +50,19 @@ namespace StatsigUnity
 
         internal FeatureGate getGate(string gateName)
         {
-            FeatureGate gate;
-            if (!_gates.TryGetValue(gateName, out gate))
-            {
-                return null;
-            }
+            _gates.TryGetValue(gateName, out var gate);
             return gate;
         }
 
         internal DynamicConfig getConfig(string configName)
         {
-            DynamicConfig config;
-            if (!_configs.TryGetValue(configName, out config))
-            {
-                return null;
-            }
+            _configs.TryGetValue(configName, out var config);
             return config;
         }
 
         internal Layer getLayer(string layerName)
         {
-            Layer layer;
-            if (!_layers.TryGetValue(layerName, out layer))
-            {
-                return null;
-            }
+            _layers.TryGetValue(layerName, out var layer);
             return layer;
         }
 

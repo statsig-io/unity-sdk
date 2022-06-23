@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 
 namespace StatsigUnity
 {
-    public class Layer
+   public class Layer
     {
         [JsonProperty("name")]
         public string Name { get; }
@@ -13,41 +13,48 @@ namespace StatsigUnity
         [JsonProperty("rule_id")]
         public string RuleID { get; }
 
-        [JsonProperty("allocated_experiment")]
-        public string AllocatedExperiment { get; }
+        [JsonProperty("value")]
+        internal IReadOnlyDictionary<string, JToken> Value { get; }
 
         [JsonProperty("secondary_exposures")]
-        public List<IReadOnlyDictionary<string, string>> SecondaryExposures { get; }
+        internal List<IReadOnlyDictionary<string, string>> SecondaryExposures;
 
-        [JsonProperty("value")]
-        private IReadOnlyDictionary<string, JToken> Value { get; }
+        [JsonProperty("undelegated_secondary_exposures")]
+        internal List<IReadOnlyDictionary<string, string>> UndelegatedSecondaryExposures;
 
-        static Layer _defaultLayer;
+        [JsonProperty("explicit_parameters")]
+        internal List<string> ExplicitParameters;
+
+        [JsonProperty("allocated_experiment_name")]
+        internal string AllocatedExperimentName;
+
+        internal Action<Layer, string> OnExposure;
+
+        static Layer _default;
 
         public static Layer Default
         {
             get
             {
-                if (_defaultLayer == null)
+                if (_default == null)
                 {
-                    _defaultLayer = new Layer();
+                    _default = new Layer();
                 }
-                return _defaultLayer;
+                return _default;
             }
         }
 
-        public Layer(string name = null, IReadOnlyDictionary<string, JToken> value = null, string ruleID = null, string allocatedExperiment = null, List<IReadOnlyDictionary<string, string>> secondaryExposures = null)
+        public Layer(string name = null, IReadOnlyDictionary<string, JToken> value = null, string ruleID = null, Action<Layer, string> onExposure = null)
         {
             Name = name ?? "";
             Value = value ?? new Dictionary<string, JToken>();
             RuleID = ruleID ?? "";
-            AllocatedExperiment = allocatedExperiment ?? "";
-            SecondaryExposures = secondaryExposures ?? new List<IReadOnlyDictionary<string, string>>();
+            OnExposure = onExposure ?? delegate { };
         }
 
         public T Get<T>(string key, T defaultValue = default(T))
         {
-            JToken outVal = null;
+            JToken outVal;
             if (!this.Value.TryGetValue(key, out outVal))
             {
                 return defaultValue;
@@ -55,7 +62,9 @@ namespace StatsigUnity
 
             try
             {
-                return outVal.Value<T>();
+                var result = outVal.ToObject<T>();
+                OnExposure(this, key);
+                return result;
             }
             catch
             {
@@ -73,33 +82,36 @@ namespace StatsigUnity
                 return null;
             }
 
-            JToken ruleToken;
-            jobj.TryGetValue("rule_id", out ruleToken);
-
-            JToken valueToken;
-            jobj.TryGetValue("value", out valueToken);
-
-            JToken allocatedExperimentToken;
-            jobj.TryGetValue("allocated_experiment_name", out allocatedExperimentToken);
 
             try
             {
-                var value = valueToken == null ? null : valueToken.ToObject<Dictionary<string, JToken>>();
-                return new Layer
+                var layer = new Layer
                 (
                     configName,
-                    value,
-                    ruleToken == null ? null : ruleToken.Value<string>(),
-                    allocatedExperimentToken == null ? null : allocatedExperimentToken.Value<string>(),
-                    jobj.TryGetValue("secondary_exposures", out JToken exposures)
-                        ? exposures.ToObject<List<IReadOnlyDictionary<string, string>>>()
-                        : new List<IReadOnlyDictionary<string, string>>()
+                    GetFromJSON<Dictionary<string, JToken>>(jobj, "value", null),
+                    GetFromJSON<string>(jobj, "rule_id", null)
                 );
+
+                layer.AllocatedExperimentName = GetFromJSON(jobj, "allocated_experiment_name", "");
+                layer.SecondaryExposures = GetFromJSON(jobj, "secondary_exposures", new List<IReadOnlyDictionary<string, string>>());
+                layer.UndelegatedSecondaryExposures = GetFromJSON(jobj, "undelegated_secondary_exposures", new List<IReadOnlyDictionary<string, string>>());
+                layer.ExplicitParameters = GetFromJSON(jobj, "explicit_parameters", new List<string>());
+
+                return layer;
             }
             catch
             {
+                // Failed to parse config.  TODO: Log this
                 return null;
             }
         }
+
+        private static T GetFromJSON<T>(JObject json, string key, T defaultValue)
+        {
+            JToken token;
+            json.TryGetValue(key, out token);
+            return token == null ? defaultValue : token.ToObject<T>();
+        }
     }
+
 }
