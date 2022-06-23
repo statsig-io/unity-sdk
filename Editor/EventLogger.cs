@@ -55,7 +55,7 @@ namespace StatsigUnity
             string ruleID,
             List<IReadOnlyDictionary<string, string>> secondaryExposures)
         {
-            var dedupeKey = string.Format("gate:{0}:{1}:{2}:{3}", user.UserID ?? "", gateName, ruleID, gateValue ? "true" : "false");
+            var dedupeKey = $"gate:{gateName}:{ruleID}:{(gateValue ? "true" : "false")}";
             if (!ShouldLogExposure(dedupeKey))
             {
                 return;
@@ -81,7 +81,7 @@ namespace StatsigUnity
             string ruleID,
             List<IReadOnlyDictionary<string, string>> secondaryExposures)
         {
-            var dedupeKey = string.Format("config:{0}:{1}:{2}", user.UserID ?? "", configName, ruleID);
+            var dedupeKey = $"config:{configName}:{ruleID}";
             if (!ShouldLogExposure(dedupeKey))
             {
                 return;
@@ -109,7 +109,7 @@ namespace StatsigUnity
             bool isExplicit,
             List<IReadOnlyDictionary<string, string>> exposures)
         {
-            var dedupeKey = $"config:{user.UserID ?? ""}:{layerName}:{ruleId}:{allocatedExperiment}:{parameterName}:{isExplicit}";
+            var dedupeKey = $"config:{layerName}:{ruleId}:{allocatedExperiment}:{parameterName}:{isExplicit}";
             if (!ShouldLogExposure(dedupeKey))
             {
                 return;
