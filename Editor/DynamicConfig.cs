@@ -51,7 +51,7 @@ namespace StatsigUnity
 
             try
             {
-                return outVal.Value<T>();
+                return outVal.ToObject<T>();
             }
             catch
             {

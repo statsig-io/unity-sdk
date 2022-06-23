@@ -103,11 +103,13 @@ namespace StatsigUnity
         internal void LogLayerExposure(
             StatsigUser user,
             string layerName,
-            string ruleID,
+            string ruleId,
             string allocatedExperiment,
-            List<IReadOnlyDictionary<string, string>> secondaryExposures)
+            string parameterName,
+            bool isExplicit,
+            List<IReadOnlyDictionary<string, string>> exposures)
         {
-            var dedupeKey = string.Format("config:{0}:{1}:{2}:{3}", user.UserID ?? "", layerName, ruleID, allocatedExperiment);
+            var dedupeKey = $"config:{user.UserID ?? ""}:{layerName}:{ruleId}:{allocatedExperiment}:{parameterName}:{isExplicit}";
             if (!ShouldLogExposure(dedupeKey))
             {
                 return;
@@ -119,10 +121,12 @@ namespace StatsigUnity
                 Metadata = new Dictionary<string, string>
                 {
                     ["config"] = layerName,
-                    ["ruleID"] = ruleID,
-                    ["allocatedExperiment"] = allocatedExperiment
+                    ["ruleID"] = ruleId,
+                    ["allocatedExperiment"] = allocatedExperiment,
+                    ["parameterName"] = parameterName,
+                    ["isExplicitParameter"] = isExplicit ? "true" : "false",
                 },
-                SecondaryExposures = secondaryExposures,
+                SecondaryExposures = exposures,
             };
             Enqueue(exposure);
         }
