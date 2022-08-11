@@ -20,8 +20,9 @@ namespace StatsigUnity
         Dictionary<string, FeatureGate> _gates;
         Dictionary<string, DynamicConfig> _configs;
         Dictionary<string, Layer> _layers;
+        private string currentUserCacheKey;
 
-        internal PersistentStore(string userID)
+        internal PersistentStore(StatsigUser user)
         {
             _gates = new Dictionary<string, FeatureGate>();
             _configs = new Dictionary<string, DynamicConfig>();
@@ -34,7 +35,8 @@ namespace StatsigUnity
                 PlayerPrefs.SetString(stableIDKey, stableID);
             }
 
-            var cachedValues = PlayerPrefs.GetString(getUserValueKey(userID), null);
+            currentUserCacheKey = getUserValueKey(user);
+            var cachedValues = PlayerPrefs.GetString(currentUserCacheKey, null);
 
             try
             {
@@ -42,7 +44,7 @@ namespace StatsigUnity
             }
             catch (Exception)
             {
-                PlayerPrefs.DeleteKey(getUserValueKey(userID));
+                PlayerPrefs.DeleteKey(currentUserCacheKey);
             }
 
             PlayerPrefs.Save();
@@ -66,12 +68,16 @@ namespace StatsigUnity
             return layer;
         }
 
-        internal void updateUserValues(string userID, string values)
+        internal void updateUserValues(StatsigUser user, string values)
         {
             try
             {
-                ParseAndSaveInitResponse(values);
-                PlayerPrefs.SetString(getUserValueKey(userID), values);
+                var cacheKey = getUserValueKey(user);
+                if (cacheKey == currentUserCacheKey)
+                {
+                    ParseAndSaveInitResponse(values);
+                }
+                PlayerPrefs.SetString(cacheKey, values);
                 PlayerPrefs.Save();
             }
             catch (Exception e)
@@ -79,9 +85,19 @@ namespace StatsigUnity
             }
         }
 
-        string getUserValueKey(string userID)
+        string getUserValueKey(StatsigUser user)
         {
-            return userValuesKeyPrefix + userID ?? "";
+            var result = $"{userValuesKeyPrefix}userID:{user.UserID};stableID:{stableID}";
+            if (user.CustomIDs == null)
+            {
+                return result;
+            }
+            
+            foreach (var (key, value) in user.CustomIDs)
+            {
+                result += $";{key}:${value}";
+            }
+            return result;
         }
 
         void ParseAndSaveInitResponse(string responseJson)

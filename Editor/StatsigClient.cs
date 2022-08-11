@@ -63,14 +63,16 @@ namespace StatsigUnity
 
             _user = user;
             _user.statsigEnvironment = _options.getEnvironmentValues();
-            _store = new PersistentStore(user.UserID);
+            _store = new PersistentStore(user);
+
+            var capturedUser = _user;
 
             Task[] tasks;
             var requestTask = _requestDispatcher.Fetch(
                         "initialize",
                         new Dictionary<string, object>
                         {
-                            ["user"] = _user,
+                            ["user"] = capturedUser,
                             ["statsigMetadata"] = GetStatsigMetadata(),
                         }, 5)
                     .ContinueWith(t =>
@@ -78,7 +80,7 @@ namespace StatsigUnity
                         var responseJson = t.Result;
                         if (responseJson != null)
                         {
-                            _store.updateUserValues(_user.UserID, responseJson);
+                            _store.updateUserValues(capturedUser, responseJson);
                         }
                     }, TaskScheduler.FromCurrentSynchronizationContext())
                 ;
@@ -86,7 +88,7 @@ namespace StatsigUnity
             {
                 var timeoutTask = Task.Delay(_options.InitializeTimeoutMs);
                 tasks = new Task[] { requestTask, timeoutTask };
-            }
+            } 
             else
             {
                 tasks = new Task[] { requestTask };
