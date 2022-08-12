@@ -110,6 +110,7 @@ namespace StatsigUnity
             customProperties = new Dictionary<string, object>();
             privateAttributes = new Dictionary<string, object>();
             statsigEnvironment = new Dictionary<string, string>();
+            customIDs = new Dictionary<string, string>();
         }
 
         public void AddCustomProperty(string key, object value)
