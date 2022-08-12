@@ -151,7 +151,7 @@ namespace StatsigUnity
                 Country = Country,
                 Locale = Locale,
                 AppVersion = AppVersion,
-                CustomIDs = CustomIDs,
+                customIDs = customIDs,
                 customProperties = customProperties,
                 statsigEnvironment = statsigEnvironment,
                 // Do NOT add private attributes here
