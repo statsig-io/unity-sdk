@@ -9,6 +9,7 @@ namespace StatsigUnity
         internal Dictionary<string, string> properties;
         internal Dictionary<string, object> customProperties;
         internal Dictionary<string, object> privateAttributes;
+        internal Dictionary<string, string> customIDs;
 
         [JsonProperty("userID")]
         public string UserID
@@ -101,7 +102,7 @@ namespace StatsigUnity
         [JsonProperty("statsigEnvironment")]
         internal IReadOnlyDictionary<string, string> statsigEnvironment;
         [JsonProperty("customIDs")]
-        internal IReadOnlyDictionary<string, string> CustomIDs;
+        public IReadOnlyDictionary<string, string> CustomIDs => customIDs;
 
         public StatsigUser()
         {
@@ -127,6 +128,15 @@ namespace StatsigUnity
                 throw new ArgumentException("Key cannot be empty.", "key");
             }
             privateAttributes[key] = value;
+        }
+
+        public void AddCustomID(string idType, string value)
+        {
+            if (string.IsNullOrWhiteSpace(idType))
+            {
+                throw new ArgumentException("idType cannot be empty.", "idType");
+            }
+            customIDs[idType] = value;
         }
 
         internal StatsigUser GetCopyForLogging()
