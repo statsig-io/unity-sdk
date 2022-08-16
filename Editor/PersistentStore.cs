@@ -93,9 +93,10 @@ namespace StatsigUnity
                 return result;
             }
             
-            foreach (var (key, value) in user.CustomIDs)
+            foreach(KeyValuePair<string, string> entry in user.CustomIDs)
             {
-                result += $";{key}:${value}";
+                result += $";{entry.Key}:${entry.Value}";
+
             }
             return result;
         }
