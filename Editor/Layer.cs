@@ -14,13 +14,13 @@ namespace StatsigUnity
         public string RuleID { get; }
 
         [JsonProperty("value")]
-        internal IReadOnlyDictionary<string, JToken> Value { get; }
+        internal Dictionary<string, JToken> Value { get; }
 
         [JsonProperty("secondary_exposures")]
-        internal List<IReadOnlyDictionary<string, string>> SecondaryExposures;
+        internal List<Dictionary<string, string>> SecondaryExposures;
 
         [JsonProperty("undelegated_secondary_exposures")]
-        internal List<IReadOnlyDictionary<string, string>> UndelegatedSecondaryExposures;
+        internal List<Dictionary<string, string>> UndelegatedSecondaryExposures;
 
         [JsonProperty("explicit_parameters")]
         internal List<string> ExplicitParameters;
@@ -44,7 +44,7 @@ namespace StatsigUnity
             }
         }
 
-        public Layer(string name = null, IReadOnlyDictionary<string, JToken> value = null, string ruleID = null, Action<Layer, string> onExposure = null)
+        public Layer(string name = null, Dictionary<string, JToken> value = null, string ruleID = null, Action<Layer, string> onExposure = null)
         {
             Name = name ?? "";
             Value = value ?? new Dictionary<string, JToken>();
@@ -93,8 +93,8 @@ namespace StatsigUnity
                 );
 
                 layer.AllocatedExperimentName = GetFromJSON(jobj, "allocated_experiment_name", "");
-                layer.SecondaryExposures = GetFromJSON(jobj, "secondary_exposures", new List<IReadOnlyDictionary<string, string>>());
-                layer.UndelegatedSecondaryExposures = GetFromJSON(jobj, "undelegated_secondary_exposures", new List<IReadOnlyDictionary<string, string>>());
+                layer.SecondaryExposures = GetFromJSON(jobj, "secondary_exposures", new List<Dictionary<string, string>>());
+                layer.UndelegatedSecondaryExposures = GetFromJSON(jobj, "undelegated_secondary_exposures", new List<Dictionary<string, string>>());
                 layer.ExplicitParameters = GetFromJSON(jobj, "explicit_parameters", new List<string>());
 
                 return layer;

@@ -52,7 +52,7 @@ namespace StatsigUnity
         public static void LogEvent(
             string eventName,
             string value = null,
-            IReadOnlyDictionary<string, string> metadata = null)
+            Dictionary<string, string> metadata = null)
         {
             EnsureInitialized();
             _client.LogEvent(eventName, value, metadata);
@@ -61,7 +61,7 @@ namespace StatsigUnity
         public static void LogEvent(
             string eventName,
             int value,
-            IReadOnlyDictionary<string, string> metadata = null)
+            Dictionary<string, string> metadata = null)
         {
             EnsureInitialized();
             _client.LogEvent(eventName, value, metadata);
@@ -70,7 +70,7 @@ namespace StatsigUnity
         public static void LogEvent(
             string eventName,
             double value,
-            IReadOnlyDictionary<string, string> metadata = null)
+            Dictionary<string, string> metadata = null)
         {
             EnsureInitialized();
             _client.LogEvent(eventName, value, metadata);
@@ -78,7 +78,7 @@ namespace StatsigUnity
 
         public static void LogEvent(
             string eventName,
-            IReadOnlyDictionary<string, string> metadata)
+            Dictionary<string, string> metadata)
         {
             EnsureInitialized();
             _client.LogEvent(eventName, metadata);

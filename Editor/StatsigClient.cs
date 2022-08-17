@@ -169,7 +169,7 @@ namespace StatsigUnity
         public void LogEvent(
             string eventName,
             string value = null,
-            IReadOnlyDictionary<string, string> metadata = null)
+            Dictionary<string, string> metadata = null)
         {
             if (value != null && value.Length > Constants.MAX_SCALAR_LENGTH)
             {
@@ -182,7 +182,7 @@ namespace StatsigUnity
         public void LogEvent(
             string eventName,
             int value,
-            IReadOnlyDictionary<string, string> metadata = null)
+            Dictionary<string, string> metadata = null)
         {
             LogEventHelper(eventName, value, metadata);
         }
@@ -190,14 +190,14 @@ namespace StatsigUnity
         public void LogEvent(
             string eventName,
             double value,
-            IReadOnlyDictionary<string, string> metadata = null)
+            Dictionary<string, string> metadata = null)
         {
             LogEventHelper(eventName, value, metadata);
         }
 
         public void LogEvent(
             string eventName,
-            IReadOnlyDictionary<string, string> metadata)
+            Dictionary<string, string> metadata)
         {
             LogEventHelper(eventName, null, metadata);
         }
@@ -213,7 +213,7 @@ namespace StatsigUnity
         void LogEventHelper(
             string eventName,
             object value,
-            IReadOnlyDictionary<string, string> metadata = null)
+            Dictionary<string, string> metadata = null)
         {
             if (eventName == null)
             {
@@ -245,7 +245,7 @@ namespace StatsigUnity
             }
         }
 
-        IReadOnlyDictionary<string, string> GetStatsigMetadata()
+        Dictionary<string, string> GetStatsigMetadata()
         {
             if (_statsigMetadata == null)
             {

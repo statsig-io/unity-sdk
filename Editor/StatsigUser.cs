@@ -96,13 +96,13 @@ namespace StatsigUnity
             }
         }
         [JsonProperty("custom")]
-        public IReadOnlyDictionary<string, object> CustomProperties => customProperties;
+        public Dictionary<string, object> CustomProperties => customProperties;
         [JsonProperty("privateAttributes")]
-        public IReadOnlyDictionary<string, object> PrivateAttributes => privateAttributes;
+        public Dictionary<string, object> PrivateAttributes => privateAttributes;
         [JsonProperty("statsigEnvironment")]
-        internal IReadOnlyDictionary<string, string> statsigEnvironment;
+        internal Dictionary<string, string> statsigEnvironment;
         [JsonProperty("customIDs")]
-        public IReadOnlyDictionary<string, string> CustomIDs => customIDs;
+        public Dictionary<string, string> CustomIDs => customIDs;
 
         public StatsigUser()
         {

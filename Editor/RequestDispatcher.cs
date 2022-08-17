@@ -42,7 +42,7 @@ namespace StatsigUnity
 
         public async Task<string> Fetch(
             string endpoint,
-            IReadOnlyDictionary<string, object> body,
+            Dictionary<string, object> body,
             int retries = 0,
             int backoff = 1)
         {
@@ -81,7 +81,7 @@ namespace StatsigUnity
 
         private async Task<string> retry(
             string endpoint,
-            IReadOnlyDictionary<string, object> body,
+            Dictionary<string, object> body,
             int retries = 0,
             int backoff = 1)
         {
