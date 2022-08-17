@@ -11,13 +11,13 @@ namespace StatsigUnity
         public string ConfigName { get; }
 
         [JsonProperty("value")]
-        public IReadOnlyDictionary<string, JToken> Value { get; }
+        public Dictionary<string, JToken> Value { get; }
 
         [JsonProperty("rule_id")]
         public string RuleID { get; }
 
         [JsonProperty("secondary_exposures")]
-        public List<IReadOnlyDictionary<string, string>> SecondaryExposures { get; }
+        public List<Dictionary<string, string>> SecondaryExposures { get; }
 
         static DynamicConfig _defaultConfig;
 
@@ -33,12 +33,12 @@ namespace StatsigUnity
             }
         }
 
-        public DynamicConfig(string configName = null, IReadOnlyDictionary<string, JToken> value = null, string ruleID = null, List<IReadOnlyDictionary<string, string>> secondaryExposures = null)
+        public DynamicConfig(string configName = null, Dictionary<string, JToken> value = null, string ruleID = null, List<Dictionary<string, string>> secondaryExposures = null)
         {
             ConfigName = configName ?? "";
             Value = value ?? new Dictionary<string, JToken>();
             RuleID = ruleID ?? "";
-            SecondaryExposures = secondaryExposures ?? new List<IReadOnlyDictionary<string, string>>();
+            SecondaryExposures = secondaryExposures ?? new List<Dictionary<string, string>>();
         }
 
         public T Get<T>(string key, T defaultValue = default(T))
@@ -84,8 +84,8 @@ namespace StatsigUnity
                     value,
                     ruleToken == null ? null : ruleToken.Value<string>(),
                     jobj.TryGetValue("secondary_exposures", out JToken exposures)
-                        ? exposures.ToObject<List<IReadOnlyDictionary<string, string>>>()
-                        : new List<IReadOnlyDictionary<string, string>>()
+                        ? exposures.ToObject<List<Dictionary<string, string>>>()
+                        : new List<Dictionary<string, string>>()
                 );
             }
             catch

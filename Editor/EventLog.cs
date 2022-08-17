@@ -23,13 +23,13 @@ namespace StatsigUnity
             }
         }
         [JsonProperty("metadata")]
-        public IReadOnlyDictionary<string, string> Metadata { get; set; }
+        public Dictionary<string, string> Metadata { get; set; }
         [JsonProperty("value")]
         public object Value { get; set; }
         [JsonProperty("time")]
         public double Time { get; } = DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalMilliseconds;
         [JsonProperty("secondaryExposures")]
-        public List<IReadOnlyDictionary<string, string>> SecondaryExposures { get; set; }
+        public List<Dictionary<string, string>> SecondaryExposures { get; set; }
 
         [JsonIgnore]
         internal bool IsErrorLog { get; set; }
@@ -59,7 +59,7 @@ namespace StatsigUnity
             };
         }
 
-        internal static IReadOnlyDictionary<string, string> TrimMetadataAsNeeded(IReadOnlyDictionary<string, string> metadata = null)
+        internal static Dictionary<string, string> TrimMetadataAsNeeded(Dictionary<string, string> metadata = null)
         {
             if (metadata == null)
             {
