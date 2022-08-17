@@ -1,31 +1,23 @@
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
 
 namespace StatsigUnity
 {
    public class Layer
     {
-        [JsonProperty("name")]
         public string Name { get; }
 
-        [JsonProperty("rule_id")]
         public string RuleID { get; }
 
-        [JsonProperty("value")]
         internal Dictionary<string, JToken> Value { get; }
 
-        [JsonProperty("secondary_exposures")]
         internal List<Dictionary<string, string>> SecondaryExposures;
 
-        [JsonProperty("undelegated_secondary_exposures")]
         internal List<Dictionary<string, string>> UndelegatedSecondaryExposures;
 
-        [JsonProperty("explicit_parameters")]
         internal List<string> ExplicitParameters;
 
-        [JsonProperty("allocated_experiment_name")]
         internal string AllocatedExperimentName;
 
         internal Action<Layer, string> OnExposure;
@@ -90,12 +82,13 @@ namespace StatsigUnity
                     configName,
                     GetFromJSON<Dictionary<string, JToken>>(jobj, "value", null),
                     GetFromJSON<string>(jobj, "rule_id", null)
-                );
-
-                layer.AllocatedExperimentName = GetFromJSON(jobj, "allocated_experiment_name", "");
-                layer.SecondaryExposures = GetFromJSON(jobj, "secondary_exposures", new List<Dictionary<string, string>>());
-                layer.UndelegatedSecondaryExposures = GetFromJSON(jobj, "undelegated_secondary_exposures", new List<Dictionary<string, string>>());
-                layer.ExplicitParameters = GetFromJSON(jobj, "explicit_parameters", new List<string>());
+                )
+                {
+                    AllocatedExperimentName = GetFromJSON(jobj, "allocated_experiment_name", ""),
+                    SecondaryExposures = GetFromJSON(jobj, "secondary_exposures", new List<Dictionary<string, string>>()),
+                    UndelegatedSecondaryExposures = GetFromJSON(jobj, "undelegated_secondary_exposures", new List<Dictionary<string, string>>()),
+                    ExplicitParameters = GetFromJSON(jobj, "explicit_parameters", new List<string>())
+                };
 
                 return layer;
             }

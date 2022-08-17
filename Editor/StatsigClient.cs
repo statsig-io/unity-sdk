@@ -1,11 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using UnityEngine;
 
 namespace StatsigUnity
@@ -72,7 +69,7 @@ namespace StatsigUnity
                         "initialize",
                         new Dictionary<string, object>
                         {
-                            ["user"] = capturedUser,
+                            ["user"] = capturedUser.ToDictionary(true),
                             ["statsigMetadata"] = GetStatsigMetadata(),
                         }, 5)
                     .ContinueWith(t =>

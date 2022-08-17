@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 using UnityEngine;
@@ -199,8 +200,9 @@ namespace StatsigUnity
                     ["batteryLevel"] = SystemInfo.batteryLevel.ToString(),
                     ["sdkType"] = SDKDetails.SDKType,
                     ["sdkVersion"] = SDKDetails.SDKVersion,
+                    ["unityVersion"] = Application.unityVersion
                 },
-                ["events"] = snapshot
+                ["events"] = snapshot.Select(evt => evt.ToDictionary())
             };
             await _dispatcher.Fetch("log_event", body, shutdown ? 0 : 5, 1);
         }
