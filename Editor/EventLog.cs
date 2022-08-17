@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using Newtonsoft.Json;
 
 namespace StatsigUnity
 {
@@ -10,9 +9,7 @@ namespace StatsigUnity
     {
         private StatsigUser _user;
 
-        [JsonProperty("eventName")]
         public string EventName { get; set; }
-        [JsonProperty("user")]
         public StatsigUser User
         {
             get => _user;
@@ -22,18 +19,12 @@ namespace StatsigUnity
                 _user = value.GetCopyForLogging();
             }
         }
-        [JsonProperty("metadata")]
         public Dictionary<string, string> Metadata { get; set; }
-        [JsonProperty("value")]
         public object Value { get; set; }
-        [JsonProperty("time")]
         public double Time { get; } = DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalMilliseconds;
-        [JsonProperty("secondaryExposures")]
         public List<Dictionary<string, string>> SecondaryExposures { get; set; }
 
-        [JsonIgnore]
         internal bool IsErrorLog { get; set; }
-        [JsonIgnore]
         internal string ErrorKey { get; set; }
 
         public EventLog()
@@ -74,6 +65,20 @@ namespace StatsigUnity
             }
 
             return metadata;
+        }
+
+        internal Dictionary<string, object> ToDictionary()
+        {
+            return new Dictionary<string, object>
+            {
+                { "eventName", EventName },
+                { "user", User.ToDictionary(false) },
+                { "metadata", Metadata },
+                { "value", Value },
+                { "time", Time },
+                { "secondaryExposures", SecondaryExposures },
+                
+            };
         }
     }
 }

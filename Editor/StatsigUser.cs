@@ -11,7 +11,6 @@ namespace StatsigUnity
         internal Dictionary<string, object> privateAttributes;
         internal Dictionary<string, string> customIDs;
 
-        [JsonProperty("userID")]
         public string UserID
         {
             get
@@ -23,7 +22,6 @@ namespace StatsigUnity
                 properties["userID"] = value;
             }
         }
-        [JsonProperty("email")]
         public string Email
         {
             get
@@ -35,7 +33,6 @@ namespace StatsigUnity
                 properties["email"] = value;
             }
         }
-        [JsonProperty("ip")]
         public string IPAddress
         {
             get
@@ -47,7 +44,6 @@ namespace StatsigUnity
                 properties["ip"] = value;
             }
         }
-        [JsonProperty("userAgent")]
         public string UserAgent
         {
             get
@@ -59,7 +55,6 @@ namespace StatsigUnity
                 properties["userAgent"] = value;
             }
         }
-        [JsonProperty("country")]
         public string Country
         {
             get
@@ -71,7 +66,6 @@ namespace StatsigUnity
                 properties["country"] = value;
             }
         }
-        [JsonProperty("locale")]
         public string Locale
         {
             get
@@ -83,7 +77,6 @@ namespace StatsigUnity
                 properties["locale"] = value;
             }
         }
-        [JsonProperty("appVersion")]
         public string AppVersion
         {
             get
@@ -95,13 +88,9 @@ namespace StatsigUnity
                 properties["appVersion"] = value;
             }
         }
-        [JsonProperty("custom")]
         public Dictionary<string, object> CustomProperties => customProperties;
-        [JsonProperty("privateAttributes")]
         public Dictionary<string, object> PrivateAttributes => privateAttributes;
-        [JsonProperty("statsigEnvironment")]
         internal Dictionary<string, string> statsigEnvironment;
-        [JsonProperty("customIDs")]
         public Dictionary<string, string> CustomIDs => customIDs;
 
         public StatsigUser()
@@ -157,6 +146,29 @@ namespace StatsigUnity
                 // Do NOT add private attributes here
             };
             return copy;
+        }
+
+        internal Dictionary<string, object> ToDictionary(bool includePrivateAttributes)
+        {
+            var result = new Dictionary<string, object>
+            {
+                { "userID", UserID },
+                { "email", Email },
+                { "ip", IPAddress },
+                { "userAgent", UserAgent },
+                { "country", Country },
+                { "locale", Locale },
+                { "appVersion", AppVersion },
+                { "custom", CustomProperties },
+                { "customIDs", CustomIDs },
+                { "statsigEnvironment", statsigEnvironment },
+            };
+
+            if (includePrivateAttributes)
+            {
+                result["privateAttributes"] = PrivateAttributes;
+            }
+            return result;
         }
     }
 }

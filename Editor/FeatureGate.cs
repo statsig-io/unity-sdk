@@ -1,19 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
 
 namespace StatsigUnity
 {
     public class FeatureGate
     {
-        [JsonProperty("name")]
         public string Name { get; }
-        [JsonProperty("value")]
         public bool Value { get; }
-        [JsonProperty("rule_id")]
         public string RuleID { get; }
-        [JsonProperty("secondary_exposures")]
         public List<Dictionary<string, string>> SecondaryExposures { get; }
 
         static FeatureGate _defaultConfig;

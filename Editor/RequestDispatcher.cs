@@ -1,15 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Net;
-using System.Net.Cache;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-
 using UnityEngine;
 
 namespace StatsigUnity
@@ -58,7 +54,9 @@ namespace StatsigUnity
                 var url = ApiBaseUrl.EndsWith("/") ? ApiBaseUrl + endpoint : ApiBaseUrl + "/" + endpoint;
                 var json = JsonConvert.SerializeObject(body, Formatting.None, jsonSettings);
                 var data = new StringContent(json, Encoding.UTF8, "application/json");
+                Debug.Log("REQ: " + url + "  -  " + json);
                 var response = await _client.PostAsync(url, data);
+                Debug.Log("RES: " + response);
                 if (response == null)
                 {
                     return null;

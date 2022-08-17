@@ -1,22 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
 
 namespace StatsigUnity
 {
     public class DynamicConfig
     {
-        [JsonProperty("name")]
         public string ConfigName { get; }
 
-        [JsonProperty("value")]
         public Dictionary<string, JToken> Value { get; }
 
-        [JsonProperty("rule_id")]
         public string RuleID { get; }
 
-        [JsonProperty("secondary_exposures")]
         public List<Dictionary<string, string>> SecondaryExposures { get; }
 
         static DynamicConfig _defaultConfig;

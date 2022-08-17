@@ -1,5 +1,4 @@
-﻿using System;
-namespace StatsigUnity
+﻿namespace StatsigUnity
 {
     internal static class Constants
     {
