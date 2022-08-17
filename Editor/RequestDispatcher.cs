@@ -54,9 +54,7 @@ namespace StatsigUnity
                 var url = ApiBaseUrl.EndsWith("/") ? ApiBaseUrl + endpoint : ApiBaseUrl + "/" + endpoint;
                 var json = JsonConvert.SerializeObject(body, Formatting.None, jsonSettings);
                 var data = new StringContent(json, Encoding.UTF8, "application/json");
-                Debug.Log("REQ: " + url + "  -  " + json);
                 var response = await _client.PostAsync(url, data);
-                Debug.Log("RES: " + response);
                 if (response == null)
                 {
                     return null;
