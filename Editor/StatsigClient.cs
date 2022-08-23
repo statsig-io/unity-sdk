@@ -21,7 +21,7 @@ namespace StatsigUnity
 
         PersistentStore _store;
 
-        GameObject _dummyGameObject;
+        GameObject _statsigGameObject;
 
         public StatsigClient(string clientKey, StatsigOptions options = null)
         {
@@ -45,10 +45,10 @@ namespace StatsigUnity
             _clientKey = clientKey;
             _options = options;
             _requestDispatcher = new RequestDispatcher(_clientKey, _options.ApiUrlBase);
-            _dummyGameObject = new GameObject("DetectPlayer");
-            _eventLogger = _dummyGameObject.AddComponent<EventLogger>();
+            _statsigGameObject = new GameObject("Statsig");
+            _eventLogger = _statsigGameObject.AddComponent<EventLogger>();
             _eventLogger.Init(_requestDispatcher);
-            UnityEngine.Object.DontDestroyOnLoad(_dummyGameObject);
+            UnityEngine.Object.DontDestroyOnLoad(_statsigGameObject);
         }
 
         public async Task Initialize(StatsigUser user)
@@ -201,7 +201,7 @@ namespace StatsigUnity
 
         public async Task Shutdown()
         {
-            UnityEngine.Object.Destroy(_dummyGameObject);
+            UnityEngine.Object.Destroy(_statsigGameObject);
             await _eventLogger.Shutdown();
         }
 
