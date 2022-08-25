@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-
+using StatsigShared;
 using UnityEngine;
 
 namespace StatsigUnity

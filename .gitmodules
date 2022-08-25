@@ -1,0 +1,3 @@
+[submodule "Editor/dotnet-statsig-shared"]
+	path = Editor/dotnet-statsig-shared
+	url = https://github.com/statsig-io/dotnet-statsig-shared.git
