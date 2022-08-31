@@ -14,8 +14,9 @@ namespace StatsigUnity
         RequestDispatcher _dispatcher;
         HashSet<string> _errorsLogged;
         Dictionary<string, double> _loggedExposures = new Dictionary<string, double>();
-
         IEnumerator _flushCoroutine;
+
+        private Dictionary<string, string> _statsigMetadata = new Dictionary<string, string>();
 
         void Awake()
         {
@@ -47,6 +48,11 @@ namespace StatsigUnity
         internal void ResetExposureDedupeKeys()
         {
             _loggedExposures = new Dictionary<string, double>();
+        }
+
+        internal void SetStatsigMetadata(Dictionary<string, string> statsigMetadata)
+        {
+            _statsigMetadata = statsigMetadata;
         }
 
         internal void LogGateExposure(
@@ -189,19 +195,7 @@ namespace StatsigUnity
 
             var body = new Dictionary<string, object>
             {
-                ["statsigMetadata"] = new Dictionary<string, string>
-                {
-                    ["sessionID"] = Guid.NewGuid().ToString(),
-                    ["language"] = Application.systemLanguage.ToString(),
-                    ["platform"] = Application.platform.ToString(),
-                    ["appVersion"] = Application.version,
-                    ["operatingSystem"] = SystemInfo.operatingSystem,
-                    ["deviceModel"] = SystemInfo.deviceModel,
-                    ["batteryLevel"] = SystemInfo.batteryLevel.ToString(),
-                    ["sdkType"] = SDKDetails.SDKType,
-                    ["sdkVersion"] = SDKDetails.SDKVersion,
-                    ["unityVersion"] = Application.unityVersion
-                },
+                ["statsigMetadata"] = _statsigMetadata,
                 ["events"] = snapshot.Select(evt => evt.ToDictionary())
             };
             await _dispatcher.Fetch("log_event", body, shutdown ? 0 : 5, 1);

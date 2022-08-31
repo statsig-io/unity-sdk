@@ -1,6 +1,6 @@
 {
   "name": "com.statsig.unitysdk",
-  "version": "0.1.7",
+  "version": "0.2.0",
   "displayName": "Statsig",
   "description": "Statsig SDK for Unity projects",
   "unity": "2019.1",
@@ -12,6 +12,13 @@
     "com.unity.nuget.newtonsoft-json": "3.0.2"
   },
   "keywords": [],
+  "samples": [
+    {
+      "displayName": "Statsig Demo",
+      "description": "Simple usage of the Statsig SDK",
+      "path": "Samples~/Demo"
+    }
+  ],
   "author": {
     "name": "Statsig",
     "email": "jkw@statsig.com",

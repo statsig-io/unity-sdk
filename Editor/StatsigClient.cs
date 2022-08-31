@@ -9,15 +9,11 @@ namespace StatsigUnity
 {
     public class StatsigClient
     {
-        const string gatesStoreKey = "statsig::featureGates";
-        const string configsStoreKey = "statsig::configs";
-
         readonly StatsigOptions _options;
         internal readonly string _clientKey;
         RequestDispatcher _requestDispatcher;
         EventLogger _eventLogger;
         StatsigUser _user;
-        Dictionary<string, string> _statsigMetadata;
 
         PersistentStore _store;
 
@@ -61,6 +57,7 @@ namespace StatsigUnity
             _user = user;
             _user.statsigEnvironment = _options.getEnvironmentValues();
             _store = new PersistentStore(user);
+            _eventLogger.SetStatsigMetadata(StatsigMetadata.AsDictionary(_store.stableID));
 
             var capturedUser = _user;
 
@@ -70,7 +67,7 @@ namespace StatsigUnity
                         new Dictionary<string, object>
                         {
                             ["user"] = capturedUser.ToDictionary(true),
-                            ["statsigMetadata"] = GetStatsigMetadata(),
+                            ["statsigMetadata"] = StatsigMetadata.AsDictionary(_store.stableID),
                         }, 5)
                     .ContinueWith(t =>
                     {
@@ -158,7 +155,6 @@ namespace StatsigUnity
 
         public async Task UpdateUser(StatsigUser newUser)
         {
-            _statsigMetadata = null;
             _eventLogger.ResetExposureDedupeKeys();
             await Initialize(newUser);
         }
@@ -240,28 +236,6 @@ namespace StatsigUnity
                 var buffer = sha.ComputeHash(Encoding.UTF8.GetBytes(name));
                 return Convert.ToBase64String(buffer);
             }
-        }
-
-        Dictionary<string, string> GetStatsigMetadata()
-        {
-            if (_statsigMetadata == null)
-            {
-                _statsigMetadata = new Dictionary<string, string>
-                {
-                    ["sessionID"] = Guid.NewGuid().ToString(),
-                    ["stableID"] = _store.stableID,
-                    ["language"] = Application.systemLanguage.ToString(),
-                    ["platform"] = Application.platform.ToString(),
-                    ["appVersion"] = Application.version,
-                    ["operatingSystem"] = SystemInfo.operatingSystem,
-                    ["deviceModel"] = SystemInfo.deviceModel,
-                    ["batteryLevel"] = SystemInfo.batteryLevel.ToString(),
-                    ["sdkType"] = SDKDetails.SDKType,
-                    ["sdkVersion"] = SDKDetails.SDKVersion,
-                };
-            }
-
-            return _statsigMetadata;
         }
 
         #endregion
