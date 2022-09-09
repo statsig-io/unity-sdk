@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEngine;
+using UnityEngine.Networking;
 
 namespace StatsigUnity
 {
@@ -16,13 +15,14 @@ namespace StatsigUnity
         private static readonly HashSet<int> retryCodes = new HashSet<int> { 408, 500, 502, 503, 504, 522, 524, 599 };
         public string Key { get; }
         public string ApiBaseUrl { get; }
-        private HttpClient _client;
+
         public RequestDispatcher(string key, string apiBaseUrl = null)
         {
             if (string.IsNullOrWhiteSpace(key))
             {
                 throw new ArgumentException("Key cannot be empty.", "key");
             }
+
             if (string.IsNullOrWhiteSpace(apiBaseUrl))
             {
                 apiBaseUrl = Constants.DEFAULT_API_URL_BASE;
@@ -30,10 +30,6 @@ namespace StatsigUnity
 
             Key = key;
             ApiBaseUrl = apiBaseUrl;
-
-            _client = new HttpClient();
-            _client.DefaultRequestHeaders.Add("STATSIG-API-KEY", Key);
-            _client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         }
 
         public async Task<string> Fetch(
@@ -44,27 +40,32 @@ namespace StatsigUnity
         {
             try
             {
-                _client.DefaultRequestHeaders.Add("STATSIG-CLIENT-TIME",
-                    (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalMilliseconds.ToString());
-
                 var jsonSettings = new JsonSerializerSettings
                 {
                     NullValueHandling = NullValueHandling.Ignore
                 };
                 var url = ApiBaseUrl.EndsWith("/") ? ApiBaseUrl + endpoint : ApiBaseUrl + "/" + endpoint;
                 var json = JsonConvert.SerializeObject(body, Formatting.None, jsonSettings);
-                var data = new StringContent(json, Encoding.UTF8, "application/json");
-                var response = await _client.PostAsync(url, data);
-                if (response == null)
+
+                var request = UnityWebRequest.Post(url, json);
+                request.timeout = 10;
+                request.SetRequestHeader("STATSIG-API-KEY", Key);
+                request.SetRequestHeader("STATSIG-CLIENT-TIME",
+                    (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalMilliseconds.ToString());
+
+                request.SendWebRequest();
+                while (!request.isDone)
                 {
-                    return null;
+                    await Task.Yield();
                 }
-                if (response.StatusCode == HttpStatusCode.Accepted || response.StatusCode == HttpStatusCode.OK)
+
+                if (request.responseCode == 200 || request.responseCode == 201)
                 {
-                    var result = response.Content.ReadAsStringAsync().Result;
+                    var result = request.downloadHandler.text;
                     return result;
                 }
-                else if (retries > 0 && retryCodes.Contains((int)response.StatusCode))
+
+                if (retries > 0 && retryCodes.Contains((int)request.responseCode))
                 {
                     return await retry(endpoint, body, retries, backoff);
                 }
@@ -72,6 +73,7 @@ namespace StatsigUnity
             catch (Exception e)
             {
             }
+
             return null;
         }
 
