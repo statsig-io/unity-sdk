@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEngine;
@@ -47,27 +45,34 @@ namespace StatsigUnity
                 var url = ApiBaseUrl.EndsWith("/") ? ApiBaseUrl + endpoint : ApiBaseUrl + "/" + endpoint;
                 var json = JsonConvert.SerializeObject(body, Formatting.None, jsonSettings);
 
-                var request = UnityWebRequest.Post(url, json);
-                request.timeout = 10;
-                request.SetRequestHeader("STATSIG-API-KEY", Key);
-                request.SetRequestHeader("STATSIG-CLIENT-TIME",
-                    (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalMilliseconds.ToString());
-
-                request.SendWebRequest();
-                while (!request.isDone)
+                using (var request = UnityWebRequest.Post(url, json))
                 {
-                    await Task.Yield();
-                }
+                    var bytes = new System.Text.UTF8Encoding().GetBytes(json);
+                    request.uploadHandler = new UploadHandlerRaw(bytes);
+                    request.downloadHandler = new DownloadHandlerBuffer();
+                    request.timeout = 10;
 
-                if (request.responseCode == 200 || request.responseCode == 201)
-                {
-                    var result = request.downloadHandler.text;
-                    return result;
-                }
+                    request.SetRequestHeader("Content-Type", "application/json");   
+                    request.SetRequestHeader("STATSIG-API-KEY", Key);
+                    request.SetRequestHeader("STATSIG-CLIENT-TIME",
+                        (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalMilliseconds.ToString());
 
-                if (retries > 0 && retryCodes.Contains((int)request.responseCode))
-                {
-                    return await retry(endpoint, body, retries, backoff);
+                    request.SendWebRequest();
+                    while (!request.isDone)
+                    {
+                        await Task.Yield();
+                    }
+                
+                    if (request.responseCode == 200 || request.responseCode == 201)
+                    {
+                        var result = request.downloadHandler.text;
+                        return result;
+                    }
+
+                    if (retries > 0 && retryCodes.Contains((int)request.responseCode))
+                    {
+                        return await retry(endpoint, body, retries, backoff);
+                    }
                 }
             }
             catch (Exception e)

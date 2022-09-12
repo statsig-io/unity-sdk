@@ -5,7 +5,7 @@ namespace StatsigUnity
     public static class SDKDetails
     {
         internal static string SDKType = "unity";
-        internal static string SDKVersion = "0.1.7";
+        internal static string SDKVersion = "0.2.2";
         internal static Dictionary<string, string> StatsigMetadata
         {
             get
