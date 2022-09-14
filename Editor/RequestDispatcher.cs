@@ -48,7 +48,15 @@ namespace StatsigUnity
                 using (var request = UnityWebRequest.Post(url, json))
                 {
                     var bytes = new System.Text.UTF8Encoding().GetBytes(json);
+                    if (request.uploadHandler != null)
+                    {
+                        request.uploadHandler.Dispose();
+                    }
                     request.uploadHandler = new UploadHandlerRaw(bytes);
+                    if (request.downloadHandler != null)
+                    {
+                        request.downloadHandler.Dispose();
+                    }
                     request.downloadHandler = new DownloadHandlerBuffer();
                     request.timeout = 10;
 
