@@ -15,12 +15,18 @@ namespace StatsigUnity
         public EnvironmentTier? EnvironmentTier { get; set; }
 
         public int InitializeTimeoutMs { get; set; }
+        
+        public int LoggingIntervalMs { get; set; }
+        
+        public int LoggingBufferMaxSize { get; set; }
 
         public StatsigOptions()
         {
             ApiUrlBase = Constants.DEFAULT_API_URL_BASE;
             EnvironmentTier = null;
             InitializeTimeoutMs = Constants.DEFAULT_INITIALIZE_TIMEOUT_MS;
+            LoggingIntervalMs = Constants.CLIENT_MAX_LOGGER_WAIT_TIME_IN_MS;
+            LoggingBufferMaxSize = Constants.CLIENT_MAX_LOGGER_QUEUE_LENGTH;
         }
 
         internal Dictionary<string, string> getEnvironmentValues()

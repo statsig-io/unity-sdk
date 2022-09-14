@@ -38,6 +38,12 @@ namespace StatsigUnitySamples.Demo
             await Statsig.Shutdown();
             AddStatus("Statsig Shutdown");
         }
+        
+        public async void OnFlushClicked()
+        {
+            await Statsig.Flush();
+            AddStatus("Statsig Flushed");
+        }
 
         public void OnCheckGateClicked()
         {

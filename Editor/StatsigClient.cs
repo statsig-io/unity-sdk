@@ -43,7 +43,7 @@ namespace StatsigUnity
             _requestDispatcher = new RequestDispatcher(_clientKey, _options.ApiUrlBase);
             _statsigGameObject = new GameObject("Statsig");
             _eventLogger = _statsigGameObject.AddComponent<EventLogger>();
-            _eventLogger.Init(_requestDispatcher);
+            _eventLogger.Init(_requestDispatcher, _options);
             UnityEngine.Object.DontDestroyOnLoad(_statsigGameObject);
         }
 
@@ -193,6 +193,11 @@ namespace StatsigUnity
             Dictionary<string, string> metadata)
         {
             LogEventHelper(eventName, null, metadata);
+        }
+
+        public async Task Flush()
+        {
+            await _eventLogger.FlushEvents(false);
         }
 
         public async Task Shutdown()

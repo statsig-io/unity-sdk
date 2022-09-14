@@ -25,6 +25,12 @@ namespace StatsigUnity
             await _client.Shutdown();
         }
 
+        public static async Task Flush()
+        {
+            EnsureInitialized();
+            await _client.Flush();
+        }
+
         public static bool CheckGate(string gateName)
         {
             EnsureInitialized();

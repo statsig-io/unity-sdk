@@ -17,6 +17,7 @@ namespace StatsigUnity
         IEnumerator _flushCoroutine;
 
         private Dictionary<string, string> _statsigMetadata = new Dictionary<string, string>();
+        private int _maxBufferSize = Constants.CLIENT_MAX_LOGGER_QUEUE_LENGTH;
 
         void Awake()
         {
@@ -38,10 +39,11 @@ namespace StatsigUnity
             FlushEvents(true);
         }
 
-        internal void Init(RequestDispatcher dispatcher)
+        internal void Init(RequestDispatcher dispatcher, StatsigOptions options)
         {
             _dispatcher = dispatcher;
-            _flushCoroutine = PeriodicFlush(Constants.CLIENT_MAX_LOGGER_WAIT_TIME_IN_SEC);
+            _maxBufferSize = options.LoggingBufferMaxSize;
+            _flushCoroutine = PeriodicFlush(options.LoggingIntervalMs);
             StartCoroutine(_flushCoroutine);
         }
 
@@ -155,7 +157,7 @@ namespace StatsigUnity
         internal void Enqueue(EventLog entry)
         {
             _eventLogQueue.Add(entry);
-            if (_eventLogQueue.Count >= Constants.CLIENT_MAX_LOGGER_QUEUE_LENGTH)
+            if (_eventLogQueue.Count >= _maxBufferSize)
             {
                 FlushEvents(false);
             }
@@ -183,7 +185,7 @@ namespace StatsigUnity
             }
         }
 
-        async Task FlushEvents(bool shutdown)
+        internal async Task FlushEvents(bool shutdown)
         {
             if (_eventLogQueue.Count == 0)
             {
