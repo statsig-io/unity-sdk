@@ -30,24 +30,40 @@ namespace StatsigUnitySamples.Demo
                 // ApiUrlBase = "http://localhost:3006/v1"
             });
 
+            AddStatus("");
             AddStatus("Statsig Initialized");
+        }
+        
+        public async void OnUpdateUserClicked()
+        {
+            Debug.Log("User is " + userIDInput.text);
+            await Statsig.UpdateUser(new StatsigUser
+            {
+                UserID = userIDInput.text
+            });
+
+            AddStatus("");
+            AddStatus($"Updated User to {userIDInput.text}");
         }
 
         public async void OnShutdownClicked()
         {
             await Statsig.Shutdown();
+            AddStatus("");
             AddStatus("Statsig Shutdown");
         }
-        
+
         public async void OnFlushClicked()
         {
             await Statsig.Flush();
+            AddStatus("");
             AddStatus("Statsig Flushed");
         }
 
         public void OnCheckGateClicked()
         {
             var result = Statsig.CheckGate(gateNameInput.text);
+            AddStatus("");
             AddStatus($"Checked Gate {gateNameInput.text} -- {(result ? "True" : "False")}");
         }
 
@@ -56,6 +72,7 @@ namespace StatsigUnitySamples.Demo
             Debug.Log("Get Config " + configNameInput.text);
 
             var result = Statsig.GetConfig(configNameInput.text);
+            AddStatus("");
             AddStatus($"  Value: {string.Join(" ", result.Value)}");
             AddStatus($"Get Config {configNameInput.text}");
         }
@@ -63,7 +80,10 @@ namespace StatsigUnitySamples.Demo
         public void OnGetExperimentClicked()
         {
             var result = Statsig.GetExperiment(experimentNameInput.text);
-            
+
+            AddStatus("");
+            AddStatus($"  ExplicitParams: {string.Join(" ", result.ExplicitParameters)}");
+            AddStatus($"  IsInLayer: {(result.IsInLayer ? "true" : "false")}");
             AddStatus($"  Rule: {result.RuleID}");
             AddStatus($"  Value: {string.Join(" ", result.Value)}");
             AddStatus($"Get Experiment {experimentNameInput.text}");
@@ -72,7 +92,8 @@ namespace StatsigUnitySamples.Demo
         public void OnGetLayerClicked()
         {
             var result = Statsig.GetLayer(layerNameInput.text);
-            
+
+            AddStatus("");
             AddStatus($"  Rule: {result.RuleID}");
             AddStatus($"  Value: {string.Join(" ", result.Get(layerParamInput.text, "fallback"))}");
             AddStatus($"Get Layer {layerNameInput.text}");
@@ -81,6 +102,7 @@ namespace StatsigUnitySamples.Demo
         public void OnLogEventClicked()
         {
             Statsig.LogEvent(logEventInput.text, 1, new Dictionary<string, string> { { "Foo", "Bar" } });
+            AddStatus("");
             AddStatus($"Event Logged: {logEventInput.text}");
         }
 

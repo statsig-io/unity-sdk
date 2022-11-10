@@ -5,40 +5,33 @@ namespace StatsigUnity
 {
     public class DynamicConfig
     {
-        public string ConfigName { get; }
+        public string ConfigName { get; internal set; }
+        public Dictionary<string, JToken> Value { get; internal set; }
+        public string RuleID { get; internal set; }
+        public List<Dictionary<string, string>> SecondaryExposures { get; internal set; }
+        public List<string> ExplicitParameters { get; internal set; }
+        public bool IsInLayer { get; internal set; }
 
-        public Dictionary<string, JToken> Value { get; }
-
-        public string RuleID { get; }
-
-        public List<Dictionary<string, string>> SecondaryExposures { get; }
-
-        static DynamicConfig _defaultConfig;
-
-        public static DynamicConfig Default
-        {
-            get
-            {
-                if (_defaultConfig == null)
-                {
-                    _defaultConfig = new DynamicConfig();
-                }
-                return _defaultConfig;
-            }
-        }
-
-        public DynamicConfig(string configName = null, Dictionary<string, JToken> value = null, string ruleID = null, List<Dictionary<string, string>> secondaryExposures = null)
+        public DynamicConfig(
+            string configName = null,
+            Dictionary<string, JToken> value = null,
+            string ruleID = null,
+            List<Dictionary<string, string>> secondaryExposures = null,
+            List<string> explicitParameters = null,
+            bool isInLayer = false)
         {
             ConfigName = configName ?? "";
             Value = value ?? new Dictionary<string, JToken>();
             RuleID = ruleID ?? "";
             SecondaryExposures = secondaryExposures ?? new List<Dictionary<string, string>>();
+            ExplicitParameters = explicitParameters ?? new List<string>();
+            IsInLayer = isInLayer;
         }
+
 
         public T Get<T>(string key, T defaultValue = default(T))
         {
-            JToken outVal = null;
-            if (!this.Value.TryGetValue(key, out outVal))
+            if (!Value.TryGetValue(key, out var outVal))
             {
                 return defaultValue;
             }
@@ -63,23 +56,21 @@ namespace StatsigUnity
                 return null;
             }
 
-            JToken ruleToken;
-            jobj.TryGetValue("rule_id", out ruleToken);
-
-            JToken valueToken;
-            jobj.TryGetValue("value", out valueToken);
+            jobj.TryGetValue("rule_id", out var ruleToken);
+            jobj.TryGetValue("value", out var valueToken);
+            jobj.TryGetValue("secondary_exposures", out var exposuresToken);
+            jobj.TryGetValue("explicit_parameters", out var explicitParamsToken);
+            jobj.TryGetValue("is_in_layer", out var isInLayerToken);
 
             try
             {
-                var value = valueToken == null ? null : valueToken.ToObject<Dictionary<string, JToken>>();
-                return new DynamicConfig
-                (
+                return new DynamicConfig(
                     configName,
-                    value,
-                    ruleToken == null ? null : ruleToken.Value<string>(),
-                    jobj.TryGetValue("secondary_exposures", out JToken exposures)
-                        ? exposures.ToObject<List<Dictionary<string, string>>>()
-                        : new List<Dictionary<string, string>>()
+                    valueToken?.ToObject<Dictionary<string, JToken>>(),
+                    ruleToken?.Value<string>(),
+                    exposuresToken?.ToObject<List<Dictionary<string, string>>>(),
+                    explicitParamsToken?.ToObject<List<string>>(),
+                    isInLayerToken?.Value<bool>() ?? false
                 );
             }
             catch
