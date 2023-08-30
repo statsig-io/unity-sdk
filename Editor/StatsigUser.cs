@@ -188,14 +188,7 @@ namespace StatsigUnity
                 { "privateAttributes", PrivateAttributes },
             };
             string jsonResult = JsonConvert.SerializeObject(result);
-            int hash = 0;
-            for (int i = 0; i < jsonResult.Length; i++)
-            {
-                var character = jsonResult[i];
-                hash = (hash << 5) - hash + character;
-                hash = hash & hash; // Convert to 32bit integer
-            }
-            return hash.ToString();
+            return Hashing.DJB2(jsonResult);
         }
     }
 }

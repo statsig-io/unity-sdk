@@ -160,20 +160,10 @@ namespace StatsigUnity
                 _layers = layers;
             }
 
-            if (response.TryGetValue("time", out objVal))
-            {
-                time = objVal.ToObject<long?>() ?? null;
-            }
 
-            if (response.TryGetValue("derived_fields", out objVal))
-            {
-                derivedFields = objVal.ToObject<Dictionary<string, string>>() ?? null;
-            }
-
-            if (response.TryGetValue("user_hash", out objVal))
-            {
-                userHash = objVal.ToObject<string>() ?? null;
-            }
+            time = JObjectExtensions.GetOrDefault<long?>(response, "time", null);
+            derivedFields = JObjectExtensions.GetOrDefault<Dictionary<string, string>>(response, "derived_fields", null);
+            userHash = JObjectExtensions.GetOrDefault<string>(response, "user_hash", null);
         }
     }
 }
