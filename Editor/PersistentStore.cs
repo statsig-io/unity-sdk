@@ -18,12 +18,18 @@ namespace StatsigUnity
         Dictionary<string, DynamicConfig> _configs;
         Dictionary<string, Layer> _layers;
         private string currentUserCacheKey;
+        private string userHash;
+        private long? time;
+        private Dictionary<string, string> derivedFields;
 
         internal PersistentStore(StatsigUser user)
         {
             _gates = new Dictionary<string, FeatureGate>();
             _configs = new Dictionary<string, DynamicConfig>();
             _layers = new Dictionary<string, Layer>();
+            time = null;
+            derivedFields = null;
+            userHash = null;
 
             stableID = PlayerPrefs.GetString(stableIDKey, null);
             if (stableID == null)
@@ -89,13 +95,31 @@ namespace StatsigUnity
             {
                 return result;
             }
-            
-            foreach(KeyValuePair<string, string> entry in user.CustomIDs)
+
+            foreach (KeyValuePair<string, string> entry in user.CustomIDs)
             {
                 result += $";{entry.Key}:${entry.Value}";
 
             }
             return result;
+        }
+
+        internal long? getSinceTime(StatsigUser user)
+        {
+            if (user.ToHash() != userHash)
+            {
+                return null;
+            }
+            return time;
+        }
+
+        internal Dictionary<string, string> getDerivedFields(StatsigUser user)
+        {
+            if (user.ToHash() != userHash)
+            {
+                return null;
+            }
+            return derivedFields;
         }
 
         void ParseAndSaveInitResponse(string responseJson)
@@ -115,7 +139,7 @@ namespace StatsigUnity
                 }
                 _gates = gates;
             }
-            
+
             if (response.TryGetValue("dynamic_configs", out objVal))
             {
                 var configMap = objVal.ToObject<Dictionary<string, object>>() ?? new Dictionary<string, object>();
@@ -135,6 +159,11 @@ namespace StatsigUnity
                 }
                 _layers = layers;
             }
+
+
+            time = JObjectExtensions.GetOrDefault<long?>(response, "time", null);
+            derivedFields = JObjectExtensions.GetOrDefault<Dictionary<string, string>>(response, "derived_fields", null);
+            userHash = JObjectExtensions.GetOrDefault<string>(response, "user_hash", null);
         }
     }
 }
