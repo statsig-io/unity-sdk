@@ -170,5 +170,32 @@ namespace StatsigUnity
             }
             return result;
         }
+
+        internal string ToHash()
+        {
+            var result = new Dictionary<string, object>
+            {
+                { "userID", UserID },
+                { "email", Email },
+                { "ip", IPAddress },
+                { "userAgent", UserAgent },
+                { "country", Country },
+                { "locale", Locale },
+                { "appVersion", AppVersion },
+                { "custom", CustomProperties },
+                { "customIDs", CustomIDs },
+                { "statsigEnvironment", statsigEnvironment },
+                { "privateAttributes", PrivateAttributes },
+            };
+            string jsonResult = JsonConvert.SerializeObject(result);
+            int hash = 0;
+            for (int i = 0; i < jsonResult.Length; i++)
+            {
+                var character = jsonResult[i];
+                hash = (hash << 5) - hash + character;
+                hash = hash & hash; // Convert to 32bit integer
+            }
+            return hash.ToString();
+        }
     }
 }

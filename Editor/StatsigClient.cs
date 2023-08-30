@@ -4,6 +4,8 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace StatsigUnity
 {
@@ -61,6 +63,9 @@ namespace StatsigUnity
 
             var capturedUser = _user;
 
+            var sinceTime = _store.getSinceTime(capturedUser);
+            var derivedFields = _store.getDerivedFields(capturedUser);
+
             Task[] tasks;
             var requestTask = _requestDispatcher.Fetch(
                         "initialize",
@@ -68,13 +73,28 @@ namespace StatsigUnity
                         {
                             ["user"] = capturedUser.ToDictionary(true),
                             ["statsigMetadata"] = StatsigMetadata.AsDictionary(_store.stableID),
+                            ["sinceTime"] = sinceTime,
+                            ["previousDerivedFields"] = derivedFields,
                         }, 5)
                     .ContinueWith(t =>
                     {
                         var responseJson = t.Result;
                         if (responseJson != null)
                         {
-                            _store.updateUserValues(capturedUser, responseJson);
+                            var response = JsonConvert.DeserializeObject<Dictionary<string, JToken>>(responseJson);
+                            JToken hasUpdatesJson;
+                            bool hasUpdates = true;
+                            if (response.TryGetValue("has_updates", out hasUpdatesJson))
+                            {
+                                hasUpdates = hasUpdatesJson.ToObject<bool>();
+                            }
+                            var userHash = capturedUser.ToHash();
+                            response["user_hash"] = userHash;
+                            var json = JsonConvert.SerializeObject(response);
+                            if (hasUpdates)
+                            {
+                                _store.updateUserValues(capturedUser, json);
+                            }
                         }
                     }, TaskScheduler.FromCurrentSynchronizationContext())
                 ;
@@ -82,7 +102,7 @@ namespace StatsigUnity
             {
                 var timeoutTask = Task.Delay(_options.InitializeTimeoutMs);
                 tasks = new Task[] { requestTask, timeoutTask };
-            } 
+            }
             else
             {
                 tasks = new Task[] { requestTask };
@@ -127,7 +147,7 @@ namespace StatsigUnity
                         ?? _store.getLayer(layerName)
                         ?? new Layer(layerName);
 
-            value.OnExposure = delegate(Layer layer, string parameterName)
+            value.OnExposure = delegate (Layer layer, string parameterName)
             {
                 var allocatedExperiment = "";
                 var isExplicit = layer.ExplicitParameters.Contains(parameterName);
