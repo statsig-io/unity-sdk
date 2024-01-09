@@ -82,6 +82,15 @@ namespace StatsigUnity
                         if (responseJson != null)
                         {
                             var response = JsonConvert.DeserializeObject<Dictionary<string, JToken>>(responseJson);
+                            JToken hashedSDKKeyUsedJson;
+                            if (response.TryGetValue("hashed_sdk_key_used", out hashedSDKKeyUsedJson))
+                            {
+                                var hashedSDKKeyUsed = hashedSDKKeyUsedJson.ToObject<string>();
+                                if (hashedSDKKeyUsed != null && hashedSDKKeyUsed != Hashing.DJB2(_clientKey))
+                                {
+                                    return;
+                                }
+                            }
                             JToken hasUpdatesJson;
                             bool hasUpdates = true;
                             if (response.TryGetValue("has_updates", out hasUpdatesJson))
