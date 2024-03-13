@@ -180,7 +180,7 @@ namespace StatsigUnity
         {
             while (true)
             {
-                yield return new WaitForSeconds(delay / 1000f);
+                yield return new WaitForSeconds(delay / 1000);
                 FlushEvents(false);
             }
         }
