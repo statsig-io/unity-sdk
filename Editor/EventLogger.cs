@@ -176,11 +176,12 @@ namespace StatsigUnity
             task.Wait();
         }
 
-        IEnumerator PeriodicFlush(int delay)
+        IEnumerator PeriodicFlush(int delayMs)
         {
             while (true)
             {
-                yield return new WaitForSeconds((float) (delay / 1000f));
+                float delayInSec = delay / 1000f;
+                yield return new WaitForSeconds(delayInSec);
                 FlushEvents(false);
             }
         }
