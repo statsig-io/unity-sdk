@@ -180,7 +180,7 @@ namespace StatsigUnity
         {
             while (true)
             {
-                float delayInSec = delay / 1000f;
+                float delayInSec = delayMs / 1000f;
                 yield return new WaitForSeconds(delayInSec);
                 FlushEvents(false);
             }
