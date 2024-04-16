@@ -11,7 +11,7 @@ namespace StatsigUnity
 
     public class StatsigOptions
     {
-        public string? ApiUrlBase { get; set; }
+        public string ApiUrlBase { get; set; }
         public EnvironmentTier? EnvironmentTier { get; set; }
 
         public int InitializeTimeoutMs { get; set; }
@@ -22,7 +22,7 @@ namespace StatsigUnity
 
         public StatsigOptions()
         {
-            ApiUrlBase = null;
+            ApiUrlBase = "";
             EnvironmentTier = null;
             InitializeTimeoutMs = Constants.DEFAULT_INITIALIZE_TIMEOUT_MS;
             LoggingIntervalMs = Constants.CLIENT_MAX_LOGGER_WAIT_TIME_IN_MS;
