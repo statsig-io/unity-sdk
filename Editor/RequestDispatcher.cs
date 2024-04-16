@@ -49,7 +49,7 @@ namespace StatsigUnity
                 {
                     NullValueHandling = NullValueHandling.Ignore
                 };
-                var baseUrl = endpoint.StartsWith("log") ? LoggingApiBaseUrl : ApiBaseUrl;
+                var baseUrl = endpoint.StartsWith("initialize") ? ApiBaseUrl : LoggingApiBaseUrl;
                 var url = baseUrl.EndsWith("/") ? baseUrl + endpoint : baseUrl + "/" + endpoint;
                 var json = JsonConvert.SerializeObject(body, Formatting.None, jsonSettings);
 
