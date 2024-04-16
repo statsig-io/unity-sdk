@@ -15,7 +15,7 @@ namespace StatsigUnity
         public string ApiBaseUrl { get; }
         public string LoggingApiBaseUrl { get; }
 
-        public RequestDispatcher(string key, string apiBaseUrl = null, loggingApiBaseUrl = null)
+        public RequestDispatcher(string key, string apiBaseUrl = null, string loggingApiBaseUrl = null)
         {
             if (string.IsNullOrWhiteSpace(key))
             {
