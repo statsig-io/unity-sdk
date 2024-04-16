@@ -42,7 +42,7 @@ namespace StatsigUnity
 
             _clientKey = clientKey;
             _options = options;
-            _requestDispatcher = new RequestDispatcher(_clientKey, _options.ApiUrlBase, _options.LoggingApiBaseUrl);
+            _requestDispatcher = new RequestDispatcher(_clientKey, _options.ApiUrlBase, _options.APIUrlBase);
             _statsigGameObject = new GameObject("Statsig");
             _eventLogger = _statsigGameObject.AddComponent<EventLogger>();
             _eventLogger.Init(_requestDispatcher, _options);
