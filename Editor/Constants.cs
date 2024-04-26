@@ -2,6 +2,7 @@
 {
     internal static class Constants
     {
+        public static string DEFAULT_LOGGING_API_URL_BASE = "https://featuregates.org/v1";
         public static string DEFAULT_API_URL_BASE = "https://statsigapi.net/v1";
         public static int DEFAULT_INITIALIZE_TIMEOUT_MS = 5000;
         public static int MAX_SCALAR_LENGTH = 64;

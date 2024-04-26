@@ -13,8 +13,9 @@ namespace StatsigUnity
         private static readonly HashSet<int> retryCodes = new HashSet<int> { 408, 500, 502, 503, 504, 522, 524, 599 };
         public string Key { get; }
         public string ApiBaseUrl { get; }
+        public string LoggingApiBaseUrl { get; }
 
-        public RequestDispatcher(string key, string apiBaseUrl = null)
+        public RequestDispatcher(string key, string apiBaseUrl = null, string loggingApiBaseUrl = null)
         {
             if (string.IsNullOrWhiteSpace(key))
             {
@@ -26,8 +27,14 @@ namespace StatsigUnity
                 apiBaseUrl = Constants.DEFAULT_API_URL_BASE;
             }
 
+            if (string.IsNullOrWhiteSpace(loggingApiBaseUrl))
+            {
+                loggingApiBaseUrl = Constants.DEFAULT_LOGGING_API_URL_BASE;
+            }
+
             Key = key;
             ApiBaseUrl = apiBaseUrl;
+            LoggingApiBaseUrl = loggingApiBaseUrl;
         }
 
         public async Task<string> Fetch(
@@ -42,7 +49,8 @@ namespace StatsigUnity
                 {
                     NullValueHandling = NullValueHandling.Ignore
                 };
-                var url = ApiBaseUrl.EndsWith("/") ? ApiBaseUrl + endpoint : ApiBaseUrl + "/" + endpoint;
+                var baseUrl = endpoint.StartsWith("initialize") ? ApiBaseUrl : LoggingApiBaseUrl;
+                var url = baseUrl.EndsWith("/") ? baseUrl + endpoint : baseUrl + "/" + endpoint;
                 var json = JsonConvert.SerializeObject(body, Formatting.None, jsonSettings);
 
                 using (var request = UnityWebRequest.Post(url, json))
@@ -60,7 +68,7 @@ namespace StatsigUnity
                     request.downloadHandler = new DownloadHandlerBuffer();
                     request.timeout = 10;
 
-                    request.SetRequestHeader("Content-Type", "application/json");   
+                    request.SetRequestHeader("Content-Type", "application/json");
                     request.SetRequestHeader("STATSIG-API-KEY", Key);
                     request.SetRequestHeader("STATSIG-CLIENT-TIME",
                         (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalMilliseconds.ToString());
@@ -70,7 +78,7 @@ namespace StatsigUnity
                     {
                         await Task.Yield();
                     }
-                
+
                     if (request.responseCode == 200 || request.responseCode == 201)
                     {
                         var result = request.downloadHandler.text;
