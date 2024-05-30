@@ -53,7 +53,7 @@ namespace StatsigUnity
                 var url = baseUrl.EndsWith("/") ? baseUrl + endpoint : baseUrl + "/" + endpoint;
                 var json = JsonConvert.SerializeObject(body, Formatting.None, jsonSettings);
 
-                using (var request = UnityWebRequest.Post(url, json))
+                using (var request = UnityWebRequest.Post(url, json, "application/json"))
                 {
                     var bytes = new System.Text.UTF8Encoding().GetBytes(json);
                     if (request.uploadHandler != null)
