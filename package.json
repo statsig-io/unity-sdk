@@ -1,6 +1,6 @@
 {
   "name": "com.statsig.unitysdk",
-  "version": "0.7.0",
+  "version": "0.7.2",
   "displayName": "Statsig",
   "description": "Statsig SDK for Unity projects",
   "unity": "2019.1",
