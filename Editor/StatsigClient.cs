@@ -138,6 +138,21 @@ namespace StatsigUnity
             return gate.Value;
         }
 
+        public bool CheckGateWithExposureLoggingDisabled(string gateName)
+        {
+            var hashedName = GetNameHash(gateName);
+            var gate = _store.getGate(hashedName);
+            if (gate == null)
+            {
+                gate = _store.getGate(gateName);
+                if (gate == null)
+                {
+                    gate = new FeatureGate(gateName, false, "");
+                }
+            }
+            return gate.Value;
+        }
+
         public DynamicConfig GetConfig(string configName)
         {
             var hashedName = GetNameHash(configName);
@@ -146,6 +161,15 @@ namespace StatsigUnity
                          ?? new DynamicConfig(configName);
 
             _eventLogger.LogConfigExposure(_user, configName, config.RuleID, config.SecondaryExposures);
+            return config;
+        }
+
+        public DynamicConfig GetConfigWithExposureLoggingDisabled(string configName)
+        {
+            var hashedName = GetNameHash(configName);
+            var config = _store.getConfig(hashedName)
+                         ?? _store.getConfig(configName)
+                         ?? new DynamicConfig(configName);
             return config;
         }
 
@@ -177,6 +201,20 @@ namespace StatsigUnity
                     isExplicit,
                     exposures
                 );
+            };
+
+            return value;
+        }
+
+        public Layer GetLayerWithExposureLoggingDisabled(string layerName)
+        {
+            var hashedName = GetNameHash(layerName);
+            var value = _store.getLayer(hashedName)
+                        ?? _store.getLayer(layerName)
+                        ?? new Layer(layerName);
+
+            value.OnExposure = delegate (Layer layer, string parameterName)
+            {
             };
 
             return value;
