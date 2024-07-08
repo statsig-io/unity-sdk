@@ -9,14 +9,14 @@ namespace StatsigUnity
 
         public static string DJB2(string value)
         {
-            int hash = 0;
+            long hash = 0;
             for (int i = 0; i < value.Length; i++)
             {
                 var character = value[i];
                 hash = (hash << 5) - hash + character;
-                hash = hash & hash; // Convert to 32bit integer
+                hash = hash & hash;
             }
-            return hash.ToString();
+            return (hash & ((1L << 32) - 1)).ToString();
         }
     }
 }
