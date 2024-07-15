@@ -37,10 +37,22 @@ namespace StatsigUnity
             return _client.CheckGate(gateName);
         }
 
+        public static bool CheckGateWithExposureLoggingDisabled(string gateName)
+        {
+            EnsureInitialized();
+            return _client.CheckGateWithExposureLoggingDisabled(gateName);
+        }
+
         public static DynamicConfig GetConfig(string configName)
         {
             EnsureInitialized();
             return _client.GetConfig(configName);
+        }
+
+        public static DynamicConfig GetConfigWithExposureLoggingDisabled(string configName)
+        {
+            EnsureInitialized();
+            return _client.GetConfigWithExposureLoggingDisabled(configName);
         }
 
         public static DynamicConfig GetExperiment(string experimentName)
@@ -49,10 +61,22 @@ namespace StatsigUnity
             return _client.GetConfig(experimentName);
         }
 
+        public static DynamicConfig GetExperimentWithExposureLoggingDisabled(string experimentName)
+        {
+            EnsureInitialized();
+            return _client.GetConfigWithExposureLoggingDisabled(experimentName);
+        }
+
         public static Layer GetLayer(string layerName)
         {
             EnsureInitialized();
             return _client.GetLayer(layerName);
+        }
+
+        public static Layer GetLayerWithExposureLoggingDisabled(string layerName)
+        {
+            EnsureInitialized();
+            return _client.GetLayerWithExposureLoggingDisabled(layerName);
         }
 
         public static void LogEvent(
