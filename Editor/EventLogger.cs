@@ -62,23 +62,29 @@ namespace StatsigUnity
             string gateName,
             bool gateValue,
             string ruleID,
-            List<Dictionary<string, string>> secondaryExposures)
+            List<Dictionary<string, string>> secondaryExposures,
+            bool isManual = false)
         {
             var dedupeKey = $"gate:{gateName}:{ruleID}:{(gateValue ? "true" : "false")}";
             if (!ShouldLogExposure(dedupeKey))
             {
                 return;
             }
+            var metadata = new Dictionary<string, string>
+            {
+                ["gate"] = gateName,
+                ["gateValue"] = gateValue ? "true" : "false",
+                ["ruleID"] = ruleID,
+            };
+            if (isManual)
+            {
+                metadata["isManualExposure"] = "true";
+            }
             var exposure = new EventLog
             {
                 User = user,
                 EventName = Constants.GATE_EXPOSURE_EVENT,
-                Metadata = new Dictionary<string, string>
-                {
-                    ["gate"] = gateName,
-                    ["gateValue"] = gateValue ? "true" : "false",
-                    ["ruleID"] = ruleID
-                },
+                Metadata = metadata,
                 SecondaryExposures = secondaryExposures,
             };
             Enqueue(exposure);
@@ -88,22 +94,28 @@ namespace StatsigUnity
             StatsigUser user,
             string configName,
             string ruleID,
-            List<Dictionary<string, string>> secondaryExposures)
+            List<Dictionary<string, string>> secondaryExposures,
+            bool isManual = false)
         {
             var dedupeKey = $"config:{configName}:{ruleID}";
             if (!ShouldLogExposure(dedupeKey))
             {
                 return;
             }
+            var metadata = new Dictionary<string, string>
+            {
+                ["config"] = configName,
+                ["ruleID"] = ruleID,
+            };
+            if (isManual)
+            {
+                metadata["isManualExposure"] = "true";
+            }
             var exposure = new EventLog
             {
                 User = user,
                 EventName = Constants.CONFIG_EXPOSURE_EVENT,
-                Metadata = new Dictionary<string, string>
-                {
-                    ["config"] = configName,
-                    ["ruleID"] = ruleID,
-                },
+                Metadata = metadata,
                 SecondaryExposures = secondaryExposures,
             };
             Enqueue(exposure);
@@ -116,25 +128,31 @@ namespace StatsigUnity
             string allocatedExperiment,
             string parameterName,
             bool isExplicit,
-            List<Dictionary<string, string>> exposures)
+            List<Dictionary<string, string>> exposures,
+            bool isManual = false)
         {
             var dedupeKey = $"config:{layerName}:{ruleId}:{allocatedExperiment}:{parameterName}:{isExplicit}";
             if (!ShouldLogExposure(dedupeKey))
             {
                 return;
             }
+            var metadata = new Dictionary<string, string>
+            {
+                ["config"] = layerName,
+                ["ruleID"] = ruleId,
+                ["allocatedExperiment"] = allocatedExperiment,
+                ["parameterName"] = parameterName,
+                ["isExplicitParameter"] = isExplicit ? "true" : "false",
+            };
+            if (isManual)
+            {
+                metadata["isManualExposure"] = "true";
+            }
             var exposure = new EventLog
             {
                 User = user,
                 EventName = Constants.LAYER_EXPOSURE_EVENT,
-                Metadata = new Dictionary<string, string>
-                {
-                    ["config"] = layerName,
-                    ["ruleID"] = ruleId,
-                    ["allocatedExperiment"] = allocatedExperiment,
-                    ["parameterName"] = parameterName,
-                    ["isExplicitParameter"] = isExplicit ? "true" : "false",
-                },
+                Metadata = metadata,
                 SecondaryExposures = exposures,
             };
             Enqueue(exposure);

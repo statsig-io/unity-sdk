@@ -153,6 +153,16 @@ namespace StatsigUnity
             return gate.Value;
         }
 
+        public void LogGateExposure(string gateName)
+        {
+            var hashedName = GetNameHash(gateName);
+            var gate = _store.getGate(hashedName)
+                       ?? _store.getGate(gateName)
+                       ?? new FeatureGate(gateName, false, "");
+
+            _eventLogger.LogGateExposure(_user, gateName, gate.Value, gate.RuleID, gate.SecondaryExposures, true);
+        }
+
         public DynamicConfig GetConfig(string configName)
         {
             var hashedName = GetNameHash(configName);
@@ -171,6 +181,16 @@ namespace StatsigUnity
                          ?? _store.getConfig(configName)
                          ?? new DynamicConfig(configName);
             return config;
+        }
+
+        public void LogConfigExposure(string configName)
+        {
+            var hashedName = GetNameHash(configName);
+            var config = _store.getConfig(hashedName)
+                         ?? _store.getConfig(configName)
+                         ?? new DynamicConfig(configName);
+
+            _eventLogger.LogConfigExposure(_user, configName, config.RuleID, config.SecondaryExposures, true);
         }
 
         public Layer GetLayer(string layerName)
@@ -218,6 +238,25 @@ namespace StatsigUnity
             };
 
             return value;
+        }
+
+        public void LogLayerParameterExposure(string layerName, string parameterName)
+        {
+            var hashedName = GetNameHash(layerName);
+            var layer = _store.getLayer(hashedName)
+                        ?? _store.getLayer(layerName)
+                        ?? new Layer(layerName);
+
+            _eventLogger.LogLayerExposure(
+                _user,
+                layerName,
+                layer.RuleID,
+                layer.AllocatedExperimentName,
+                parameterName,
+                layer.ExplicitParameters.Contains(parameterName),
+                layer.UndelegatedSecondaryExposures,
+                true
+            );
         }
 
         public async Task UpdateUser(StatsigUser newUser)
