@@ -43,7 +43,7 @@ namespace StatsigUnity
             return _client.CheckGateWithExposureLoggingDisabled(gateName);
         }
 
-        public static void LogGateExposure(string gateName)
+        public static void ManuallyLogGateExposure(string gateName)
         {
             EnsureInitialized();
             _client.LogGateExposure(gateName);
@@ -61,7 +61,7 @@ namespace StatsigUnity
             return _client.GetConfigWithExposureLoggingDisabled(configName);
         }
 
-        public static void LogConfigExposure(string configName)
+        public static void ManuallyLogConfigExposure(string configName)
         {
             EnsureInitialized();
             _client.LogConfigExposure(configName);
@@ -79,7 +79,7 @@ namespace StatsigUnity
             return _client.GetConfigWithExposureLoggingDisabled(experimentName);
         }
 
-        public static void LogExperimentExposure(string experimentName)
+        public static void ManuallyLogExperimentExposure(string experimentName)
         {
             EnsureInitialized();
             _client.LogConfigExposure(experimentName);
@@ -97,7 +97,7 @@ namespace StatsigUnity
             return _client.GetLayerWithExposureLoggingDisabled(layerName);
         }
 
-        public static void LogLayerParameterExposure(string layerName, string parameterName)
+        public static void ManuallyLogLayerParameterExposure(string layerName, string parameterName)
         {
             EnsureInitialized();
             _client.LogLayerParameterExposure(layerName, parameterName);
