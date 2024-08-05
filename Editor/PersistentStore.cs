@@ -23,11 +23,14 @@ namespace StatsigUnity
         private long? time;
         private Dictionary<string, string> derivedFields;
 
-        internal PersistentStore(StatsigUser user)
+        private StatsigOptions _statsigOptions;
+
+        internal PersistentStore(StatsigUser user, StatsigOptions options)
         {
             _gates = new Dictionary<string, FeatureGate>();
             _configs = new Dictionary<string, DynamicConfig>();
             _layers = new Dictionary<string, Layer>();
+            _statsigOptions = options;
             time = null;
             derivedFields = null;
             userHash = null;
@@ -81,7 +84,15 @@ namespace StatsigUnity
                 {
                     ParseAndSaveInitResponse(values);
                 }
-                storeDataPersistently(cacheKey, values);
+                if (_statsigOptions.ShouldSaveValuesAsync)
+                {
+                    storeDataPersistently(cacheKey, values);
+                }
+                else
+                {
+                    PlayerPrefs.SetString(cacheKey, values);
+                    PlayerPrefs.Save();
+                }
             }
             catch (Exception e)
             {

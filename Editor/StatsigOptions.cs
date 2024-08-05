@@ -20,6 +20,8 @@ namespace StatsigUnity
 
         public int LoggingBufferMaxSize { get; set; }
 
+        public bool ShouldSaveValuesAsync { get; set; }
+
         public StatsigOptions()
         {
             ApiUrlBase = "";
@@ -27,6 +29,7 @@ namespace StatsigUnity
             InitializeTimeoutMs = Constants.DEFAULT_INITIALIZE_TIMEOUT_MS;
             LoggingIntervalMs = Constants.CLIENT_MAX_LOGGER_WAIT_TIME_IN_MS;
             LoggingBufferMaxSize = Constants.CLIENT_MAX_LOGGER_QUEUE_LENGTH;
+            ShouldSaveValuesAsync = false;
         }
 
         internal Dictionary<string, string> getEnvironmentValues()
