@@ -21,6 +21,8 @@ namespace StatsigUnity
 
         GameObject _statsigGameObject;
 
+        Dictionary<string, string> _hashMemoi = new Dictionary<string, string>();
+
         public StatsigClient(string clientKey, StatsigOptions options = null)
         {
             if (string.IsNullOrWhiteSpace(clientKey))
@@ -342,10 +344,14 @@ namespace StatsigUnity
 
         string GetNameHash(string name)
         {
+            if (_hashMemoi.ContainsKey(name))
+                return _hashMemoi[name];
+
             using (var sha = SHA256.Create())
             {
                 var buffer = sha.ComputeHash(Encoding.UTF8.GetBytes(name));
-                return Convert.ToBase64String(buffer);
+                _hashMemoi[name] = Convert.ToBase64String(buffer);
+                return _hashMemoi[name];
             }
         }
 
