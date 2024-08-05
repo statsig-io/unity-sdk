@@ -84,7 +84,7 @@ namespace StatsigUnity
                 {
                     ParseAndSaveInitResponse(values);
                 }
-                if (_statsigOptions.ShouldSaveValuesAsync)
+                if (_statsigOptions.EnableAsyncCacheWrites)
                 {
                     storeDataPersistently(cacheKey, values);
                 }
