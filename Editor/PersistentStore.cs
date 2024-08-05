@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Threading.Tasks;
 
 using UnityEngine;
 
@@ -22,11 +23,14 @@ namespace StatsigUnity
         private long? time;
         private Dictionary<string, string> derivedFields;
 
-        internal PersistentStore(StatsigUser user)
+        private StatsigOptions _statsigOptions;
+
+        internal PersistentStore(StatsigUser user, StatsigOptions options)
         {
             _gates = new Dictionary<string, FeatureGate>();
             _configs = new Dictionary<string, DynamicConfig>();
             _layers = new Dictionary<string, Layer>();
+            _statsigOptions = options;
             time = null;
             derivedFields = null;
             userHash = null;
@@ -80,12 +84,28 @@ namespace StatsigUnity
                 {
                     ParseAndSaveInitResponse(values);
                 }
-                PlayerPrefs.SetString(cacheKey, values);
-                PlayerPrefs.Save();
+                if (_statsigOptions.EnableAsyncCacheWrites)
+                {
+                    storeDataPersistently(cacheKey, values);
+                }
+                else
+                {
+                    PlayerPrefs.SetString(cacheKey, values);
+                    PlayerPrefs.Save();
+                }
             }
             catch (Exception e)
             {
             }
+        }
+
+        internal async Task storeDataPersistently(string cacheKey, string values)
+        {
+            await Task.Run(() =>
+            {
+                PlayerPrefs.SetString(cacheKey, values);
+                PlayerPrefs.Save();
+            });
         }
 
         string getUserValueKey(StatsigUser user)

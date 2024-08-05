@@ -58,7 +58,7 @@ namespace StatsigUnity
 
             _user = user;
             _user.statsigEnvironment = _options.getEnvironmentValues();
-            _store = new PersistentStore(user);
+            _store = new PersistentStore(user, _options);
             _eventLogger.SetStatsigMetadata(StatsigMetadata.AsDictionary(_store.stableID));
 
             var capturedUser = _user;
