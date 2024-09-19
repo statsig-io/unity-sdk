@@ -14,7 +14,7 @@ jobs:
     steps:
       - name: Get KONG
         run: |
-          git clone https://${{ secrets.KONG_REPO_PAT }}@github.com/statsig-io/kong.git
+          git clone https://${{ secrets.KONG_FINE_GRAINED_REPO_PAT }}@github.com/statsig-io/kong.git
 
       - name: Setup .NET Core SDK
         uses: actions/setup-dotnet@v2
@@ -28,7 +28,7 @@ jobs:
           dotnet restore
           dotnet build
         env:
-          repo_pat: ${{ secrets.KONG_REPO_PAT }}
+          repo_pat: ${{ secrets.KONG_FINE_GRAINED_REPO_PAT }}
 
       - name: Run Tests
         run: |
