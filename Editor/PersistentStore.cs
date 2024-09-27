@@ -23,6 +23,8 @@ namespace StatsigUnity
         private long? time;
         private Dictionary<string, string> derivedFields;
 
+        internal string hashUsed;
+
         private StatsigOptions _statsigOptions;
 
         internal PersistentStore(StatsigUser user, StatsigOptions options)
@@ -34,6 +36,7 @@ namespace StatsigUnity
             time = null;
             derivedFields = null;
             userHash = null;
+            hashUsed = "sha256";
 
             stableID = PlayerPrefs.GetString(stableIDKey, null);
             if (stableID == null)
@@ -180,7 +183,7 @@ namespace StatsigUnity
                 _layers = layers;
             }
 
-
+            hashUsed = JObjectExtensions.GetOrDefault<string>(response, "hash_used", "sha256");
             time = JObjectExtensions.GetOrDefault<long?>(response, "time", null);
             derivedFields = JObjectExtensions.GetOrDefault<Dictionary<string, string>>(response, "derived_fields", null);
             userHash = JObjectExtensions.GetOrDefault<string>(response, "user_hash", null);
