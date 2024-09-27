@@ -75,6 +75,7 @@ namespace StatsigUnity
                             ["statsigMetadata"] = StatsigMetadata.AsDictionary(_store.stableID),
                             ["sinceTime"] = sinceTime,
                             ["previousDerivedFields"] = derivedFields,
+                            ["hash"] = "djb2",
                         }, 5)
                     .ContinueWith(t =>
                     {
@@ -123,7 +124,7 @@ namespace StatsigUnity
 
         public bool CheckGate(string gateName)
         {
-            var hashedName = GetNameHash(gateName);
+            var hashedName = GetNameHash(gateName, _store.hashUsed);
             var gate = _store.getGate(hashedName);
             if (gate == null)
             {
@@ -140,7 +141,7 @@ namespace StatsigUnity
 
         public bool CheckGateWithExposureLoggingDisabled(string gateName)
         {
-            var hashedName = GetNameHash(gateName);
+            var hashedName = GetNameHash(gateName, _store.hashUsed);
             var gate = _store.getGate(hashedName);
             if (gate == null)
             {
@@ -155,7 +156,7 @@ namespace StatsigUnity
 
         public void LogGateExposure(string gateName)
         {
-            var hashedName = GetNameHash(gateName);
+            var hashedName = GetNameHash(gateName, _store.hashUsed);
             var gate = _store.getGate(hashedName)
                        ?? _store.getGate(gateName)
                        ?? new FeatureGate(gateName, false, "");
@@ -165,7 +166,7 @@ namespace StatsigUnity
 
         public DynamicConfig GetConfig(string configName)
         {
-            var hashedName = GetNameHash(configName);
+            var hashedName = GetNameHash(configName, _store.hashUsed);
             var config = _store.getConfig(hashedName)
                          ?? _store.getConfig(configName)
                          ?? new DynamicConfig(configName);
@@ -176,7 +177,7 @@ namespace StatsigUnity
 
         public DynamicConfig GetConfigWithExposureLoggingDisabled(string configName)
         {
-            var hashedName = GetNameHash(configName);
+            var hashedName = GetNameHash(configName, _store.hashUsed);
             var config = _store.getConfig(hashedName)
                          ?? _store.getConfig(configName)
                          ?? new DynamicConfig(configName);
@@ -185,7 +186,7 @@ namespace StatsigUnity
 
         public void LogConfigExposure(string configName)
         {
-            var hashedName = GetNameHash(configName);
+            var hashedName = GetNameHash(configName, _store.hashUsed);
             var config = _store.getConfig(hashedName)
                          ?? _store.getConfig(configName)
                          ?? new DynamicConfig(configName);
@@ -195,7 +196,7 @@ namespace StatsigUnity
 
         public Layer GetLayer(string layerName)
         {
-            var hashedName = GetNameHash(layerName);
+            var hashedName = GetNameHash(layerName, _store.hashUsed);
             var value = _store.getLayer(hashedName)
                         ?? _store.getLayer(layerName)
                         ?? new Layer(layerName);
@@ -228,7 +229,7 @@ namespace StatsigUnity
 
         public Layer GetLayerWithExposureLoggingDisabled(string layerName)
         {
-            var hashedName = GetNameHash(layerName);
+            var hashedName = GetNameHash(layerName, _store.hashUsed);
             var value = _store.getLayer(hashedName)
                         ?? _store.getLayer(layerName)
                         ?? new Layer(layerName);
@@ -242,7 +243,7 @@ namespace StatsigUnity
 
         public void LogLayerParameterExposure(string layerName, string parameterName)
         {
-            var hashedName = GetNameHash(layerName);
+            var hashedName = GetNameHash(layerName, _store.hashUsed);
             var layer = _store.getLayer(hashedName)
                         ?? _store.getLayer(layerName)
                         ?? new Layer(layerName);
@@ -340,8 +341,16 @@ namespace StatsigUnity
             _eventLogger.Enqueue(eventLog);
         }
 
-        string GetNameHash(string name)
+        string GetNameHash(string name, string hash)
         {
+            if (hash == "djb2")
+            {
+                return Hashing.DJB2(name);
+            }
+            if (hash == "none")
+            {
+                return name;
+            }
             using (var sha = SHA256.Create())
             {
                 var buffer = sha.ComputeHash(Encoding.UTF8.GetBytes(name));
