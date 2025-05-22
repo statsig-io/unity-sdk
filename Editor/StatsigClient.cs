@@ -171,7 +171,7 @@ namespace StatsigUnity
                          ?? _store.getConfig(configName)
                          ?? new DynamicConfig(configName);
 
-            _eventLogger.LogConfigExposure(_user, configName, config.RuleID, config.SecondaryExposures, config.RulePassed,);
+            _eventLogger.LogConfigExposure(_user, configName, config.RuleID, config.SecondaryExposures, config.RulePassed);
             return config;
         }
 
