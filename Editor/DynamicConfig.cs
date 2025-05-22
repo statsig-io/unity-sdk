@@ -69,7 +69,7 @@ namespace StatsigUnity
             jobj.TryGetValue("explicit_parameters", out var explicitParamsToken);
             jobj.TryGetValue("is_in_layer", out var isInLayerToken);
             jobj.TryGetValue("is_user_in_experiment", out var isUserInExperiment);
-            jobj.TryGetValue("passed", out var passedToken)
+            jobj.TryGetValue("passed", out var passedToken);
 
             try
             {
@@ -80,7 +80,7 @@ namespace StatsigUnity
                     exposuresToken?.ToObject<List<Dictionary<string, string>>>(),
                     explicitParamsToken?.ToObject<List<string>>(),
                     isInLayerToken?.Value<bool>() ?? false,
-                    isUserInExperiment?.Value<bool>() ?? false
+                    isUserInExperiment?.Value<bool>() ?? false,
                     passedToken?.Value<bool>() ?? false
                 );
             }
