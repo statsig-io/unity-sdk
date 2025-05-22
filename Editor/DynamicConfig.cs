@@ -13,6 +13,7 @@ namespace StatsigUnity
         public bool IsInLayer { get; internal set; }
 
         public bool IsUserInExperiment { get; internal set; }
+        public bool RulePassed { get; internal set; }
 
         public DynamicConfig(
             string configName = null,
@@ -21,7 +22,8 @@ namespace StatsigUnity
             List<Dictionary<string, string>> secondaryExposures = null,
             List<string> explicitParameters = null,
             bool isInLayer = false,
-            bool isUserInExperiment = false)
+            bool isUserInExperiment = false,
+            bool passed = false)
         {
             ConfigName = configName ?? "";
             Value = value ?? new Dictionary<string, JToken>();
@@ -30,6 +32,7 @@ namespace StatsigUnity
             ExplicitParameters = explicitParameters ?? new List<string>();
             IsInLayer = isInLayer;
             IsUserInExperiment = isUserInExperiment;
+            RulePassed = passed;
         }
 
 
@@ -66,6 +69,7 @@ namespace StatsigUnity
             jobj.TryGetValue("explicit_parameters", out var explicitParamsToken);
             jobj.TryGetValue("is_in_layer", out var isInLayerToken);
             jobj.TryGetValue("is_user_in_experiment", out var isUserInExperiment);
+            jobj.TryGetValue("passed", out var passedToken)
 
             try
             {
@@ -77,6 +81,7 @@ namespace StatsigUnity
                     explicitParamsToken?.ToObject<List<string>>(),
                     isInLayerToken?.Value<bool>() ?? false,
                     isUserInExperiment?.Value<bool>() ?? false
+                    passedToken?.Value<bool>() ?? false
                 );
             }
             catch

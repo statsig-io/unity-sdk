@@ -95,6 +95,7 @@ namespace StatsigUnity
             string configName,
             string ruleID,
             List<Dictionary<string, string>> secondaryExposures,
+            bool rulePassed,
             bool isManual = false)
         {
             var dedupeKey = $"config:{configName}:{ruleID}";
@@ -111,6 +112,7 @@ namespace StatsigUnity
             {
                 metadata["isManualExposure"] = "true";
             }
+            metadata["rulePassed"] = rulePassed ? "true" : "false";
             var exposure = new EventLog
             {
                 User = user,

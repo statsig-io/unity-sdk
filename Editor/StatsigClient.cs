@@ -171,7 +171,7 @@ namespace StatsigUnity
                          ?? _store.getConfig(configName)
                          ?? new DynamicConfig(configName);
 
-            _eventLogger.LogConfigExposure(_user, configName, config.RuleID, config.SecondaryExposures);
+            _eventLogger.LogConfigExposure(_user, configName, config.RuleID, config.SecondaryExposures, config.RulePassed,);
             return config;
         }
 
@@ -191,7 +191,7 @@ namespace StatsigUnity
                          ?? _store.getConfig(configName)
                          ?? new DynamicConfig(configName);
 
-            _eventLogger.LogConfigExposure(_user, configName, config.RuleID, config.SecondaryExposures, true);
+            _eventLogger.LogConfigExposure(_user, configName, config.RuleID, config.SecondaryExposures, config.RulePassed, true);
         }
 
         public Layer GetLayer(string layerName)
