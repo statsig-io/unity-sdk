@@ -41,7 +41,7 @@ namespace StatsigUnity
             hashUsed = "sha256";
 
             stableID = PlayerPrefs.GetString(stableIDKey, null);
-            if (stableID == null)
+            if (string.IsNullOrEmpty(stableID))
             {
                 stableID = Guid.NewGuid().ToString();
                 PlayerPrefs.SetString(stableIDKey, stableID);
