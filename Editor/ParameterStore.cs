@@ -37,44 +37,47 @@ namespace StatsigUnity
                 {
                     return defaultValue;
                 }
-                if (defaultValue != null)
+
+                if (defaultValue == null)
                 {
-                    switch (paramType)
-                    {
-                        case "boolean":
-                            if (!(defaultValue is bool))
-                            {
-                                return defaultValue;
-                            }
-                            break;
-                        case "number":
-                            if (!(defaultValue is int) && !(defaultValue is decimal) && !(defaultValue is long) && !(defaultValue is float) && !(defaultValue is double))
-                            {
-                                return defaultValue;
-                            }
-                            break;
-                        case "string":
-                            if (!(defaultValue is string))
-                            {
-                                return defaultValue;
-                            }
-                            break;
-                        case "object":
-                            var type = defaultValue.GetType();
-                            if (!(type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>)))
-                            {
-                                return defaultValue;
-                            }
-                            break;
-                        case "array":
-                            var isList = defaultValue.GetType().IsGenericType && defaultValue.GetType().GetGenericTypeDefinition().IsAssignableFrom(typeof(List<>));
-                            var isArray = defaultValue.GetType().IsArray;
-                            if (!isList && !isArray)
-                            {
-                                return defaultValue;
-                            }
-                            break;
-                    }
+                    return GetValueFromRefType(parameter, defaultValue);
+                }
+
+                switch (paramType)
+                {
+                    case "boolean":
+                        if (!(defaultValue is bool))
+                        {
+                            return defaultValue;
+                        }
+                        break;
+                    case "number":
+                        if (!(defaultValue is int) && !(defaultValue is decimal) && !(defaultValue is long) && !(defaultValue is float) && !(defaultValue is double))
+                        {
+                            return defaultValue;
+                        }
+                        break;
+                    case "string":
+                        if (!(defaultValue is string))
+                        {
+                            return defaultValue;
+                        }
+                        break;
+                    case "object":
+                        var type = defaultValue.GetType();
+                        if (!(type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>)))
+                        {
+                            return defaultValue;
+                        }
+                        break;
+                    case "array":
+                        var isList = defaultValue.GetType().IsGenericType && defaultValue.GetType().GetGenericTypeDefinition().IsAssignableFrom(typeof(List<>));
+                        var isArray = defaultValue.GetType().IsArray;
+                        if (!isList && !isArray)
+                        {
+                            return defaultValue;
+                        }
+                        break;
                 }
                 return GetValueFromRefType(parameter, defaultValue);
             }
