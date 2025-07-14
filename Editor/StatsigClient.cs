@@ -151,6 +151,7 @@ namespace StatsigUnity
                     gate = new FeatureGate(gateName, false, "");
                 }
             }
+            _eventLogger.LogNonExposedCheck(gateName);
             return gate.Value;
         }
 
@@ -181,6 +182,7 @@ namespace StatsigUnity
             var config = _store.getConfig(hashedName)
                          ?? _store.getConfig(configName)
                          ?? new DynamicConfig(configName);
+            _eventLogger.LogNonExposedCheck(configName);
             return config;
         }
 
@@ -233,12 +235,50 @@ namespace StatsigUnity
             var value = _store.getLayer(hashedName)
                         ?? _store.getLayer(layerName)
                         ?? new Layer(layerName);
+            _eventLogger.LogNonExposedCheck(layerName);
 
             value.OnExposure = delegate (Layer layer, string parameterName)
             {
             };
 
             return value;
+        }
+
+        public ParameterStore GetParameterStore(string paramStoreName)
+        {
+            var hashedName = GetNameHash(paramStoreName, _store.hashUsed);
+            var paramStore = _store.getParamStore(hashedName)
+                             ?? _store.getParamStore(paramStoreName);
+            _eventLogger.LogNonExposedCheck(paramStoreName);
+
+            if (paramStore == null)
+            {
+                return new ParameterStore(paramStoreName, null, this);
+            }
+            return new ParameterStore(
+                paramStore.Name,
+                paramStore.Parameters,
+                this
+            );
+        }
+
+        public ParameterStore GetParameterStoreWithExposureLoggingDisabled(string paramStoreName)
+        {
+            var hashedName = GetNameHash(paramStoreName, _store.hashUsed);
+            var paramStoreSpec = _store.getParamStore(hashedName)
+                             ?? _store.getParamStore(paramStoreName);
+            _eventLogger.LogNonExposedCheck(paramStoreName);
+
+            if (paramStoreSpec == null)
+            {
+                return new ParameterStore(paramStoreName, null, this, true);
+            }
+            return new ParameterStore(
+                paramStoreSpec.Name,
+                paramStoreSpec.Parameters,
+                this,
+                true
+            );
         }
 
         public void LogLayerParameterExposure(string layerName, string parameterName)

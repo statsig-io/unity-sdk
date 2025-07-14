@@ -69,16 +69,20 @@ namespace StatsigUnity
 
         internal Dictionary<string, object> ToDictionary()
         {
-            return new Dictionary<string, object>
+            var vals = new Dictionary<string, object>
             {
                 { "eventName", EventName },
-                { "user", User.ToDictionary(false) },
                 { "metadata", Metadata },
                 { "value", Value },
                 { "time", Time },
                 { "secondaryExposures", SecondaryExposures },
-                
             };
+
+            if (User != null)
+            {
+                vals["user"] = User.ToDictionary(false);
+            }
+            return vals;
         }
     }
 }

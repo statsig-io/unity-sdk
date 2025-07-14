@@ -18,6 +18,7 @@ namespace StatsigUnity
         Dictionary<string, FeatureGate> _gates;
         Dictionary<string, DynamicConfig> _configs;
         Dictionary<string, Layer> _layers;
+        Dictionary<string, ParamStoreSpec> _paramStores;
         private string currentUserCacheKey;
         private string userHash;
         private long? time;
@@ -32,6 +33,7 @@ namespace StatsigUnity
             _gates = new Dictionary<string, FeatureGate>();
             _configs = new Dictionary<string, DynamicConfig>();
             _layers = new Dictionary<string, Layer>();
+            _paramStores = new Dictionary<string, ParamStoreSpec>();
             _statsigOptions = options;
             time = null;
             derivedFields = null;
@@ -76,6 +78,12 @@ namespace StatsigUnity
         {
             _layers.TryGetValue(layerName, out var layer);
             return layer;
+        }
+
+        internal ParamStoreSpec getParamStore(string paramStoreName)
+        {
+            _paramStores.TryGetValue(paramStoreName, out var paramStore);
+            return paramStore;
         }
 
         internal void updateUserValues(StatsigUser user, string values)
@@ -150,6 +158,7 @@ namespace StatsigUnity
             var gates = new Dictionary<string, FeatureGate>();
             var configs = new Dictionary<string, DynamicConfig>();
             var layers = new Dictionary<string, Layer>();
+            var paramStores = new Dictionary<string, ParamStoreSpec>();
             var response = JsonConvert.DeserializeObject<Dictionary<string, JToken>>(responseJson);
             JToken objVal;
 
@@ -181,6 +190,16 @@ namespace StatsigUnity
                     layers[kv.Key] = Layer.FromJObject(kv.Key, kv.Value as JObject);
                 }
                 _layers = layers;
+            }
+
+            if (response.TryGetValue("param_stores", out objVal))
+            {
+                var paramStoreMap = objVal.ToObject<Dictionary<string, JObject>>() ?? new Dictionary<string, JObject>();
+                foreach (var kv in paramStoreMap)
+                {
+                    paramStores[kv.Key] = ParamStoreSpec.FromJObject(kv.Key, kv.Value as JObject);
+                }
+                _paramStores = paramStores;
             }
 
             hashUsed = JObjectExtensions.GetOrDefault<string>(response, "hash_used", "sha256");

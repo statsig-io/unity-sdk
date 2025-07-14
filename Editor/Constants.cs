@@ -12,5 +12,6 @@
         public static string GATE_EXPOSURE_EVENT = "statsig::gate_exposure";
         public static string CONFIG_EXPOSURE_EVENT = "statsig::config_exposure";
         public static string LAYER_EXPOSURE_EVENT = "statsig::layer_exposure";
+        public static string NON_EXPOSED_CHECKS_EVENT = "statsig::non_exposed_checks";
     }
 }
