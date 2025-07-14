@@ -61,7 +61,7 @@ namespace StatsigUnity
             _statsigMetadata = statsigMetadata;
         }
 
-        internal void LogNonExposedCheck(string name)
+        internal void IncrementNonExposedCheck(string name)
         {
             if (_nonExposedChecks.ContainsKey(name))
             {
