@@ -103,6 +103,18 @@ namespace StatsigUnity
             _client.LogLayerParameterExposure(layerName, parameterName);
         }
 
+        public static ParameterStore GetParameterStore(string paramStoreName)
+        {
+            EnsureInitialized();
+            return _client.GetParameterStore(paramStoreName);
+        }
+
+        public static ParameterStore GetParameterStoreWithExposureLoggingDisabled(string paramStoreName)
+        {
+            EnsureInitialized();
+            return _client.GetParameterStoreWithExposureLoggingDisabled(paramStoreName);
+        }
+
         public static void LogEvent(
             string eventName,
             string value = null,

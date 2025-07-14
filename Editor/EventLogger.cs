@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 using UnityEngine;
 
@@ -18,6 +20,8 @@ namespace StatsigUnity
 
         private Dictionary<string, string> _statsigMetadata = new Dictionary<string, string>();
         private int _maxBufferSize = Constants.CLIENT_MAX_LOGGER_QUEUE_LENGTH;
+
+        private Dictionary<string, int> _nonExposedChecks = new Dictionary<string, int>();
 
         void Awake()
         {
@@ -55,6 +59,18 @@ namespace StatsigUnity
         internal void SetStatsigMetadata(Dictionary<string, string> statsigMetadata)
         {
             _statsigMetadata = statsigMetadata;
+        }
+
+        internal void IncrementNonExposedCheck(string name)
+        {
+            if (_nonExposedChecks.ContainsKey(name))
+            {
+                _nonExposedChecks[name]++;
+            }
+            else
+            {
+                _nonExposedChecks[name] = 1;
+            }
         }
 
         internal void LogGateExposure(
@@ -205,8 +221,27 @@ namespace StatsigUnity
             }
         }
 
+        internal void AddNonExposedChecksEvent()
+        {
+            if (_nonExposedChecks.Count == 0)
+            {
+                return;
+            }
+
+            var metadata = new Dictionary<string, string>();
+            metadata["checks"] = JsonConvert.SerializeObject(_nonExposedChecks);
+            var eventLog = new EventLog
+            {
+                EventName = Constants.NON_EXPOSED_CHECKS_EVENT,
+                Metadata = metadata
+            };
+            Enqueue(eventLog);
+            _nonExposedChecks.Clear();
+        }
+
         internal async Task FlushEvents(bool shutdown)
         {
+            AddNonExposedChecksEvent();
             if (_eventLogQueue.Count == 0)
             {
                 return;
