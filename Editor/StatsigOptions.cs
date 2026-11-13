@@ -12,6 +12,15 @@ namespace StatsigUnity
     public class StatsigOptions
     {
         public string ApiUrlBase { get; set; }
+
+        /// <summary>Full initialization URL. Null or empty preserves ApiUrlBase/default behavior.</summary>
+        public string InitializationUrl { get; set; }
+
+        /// <summary>Full event logging URL. Null or empty preserves ApiUrlBase/default behavior.</summary>
+        public string EventLoggingUrl { get; set; }
+
+        /// <summary>Headers copied when the client is constructed. Applies to both destinations.</summary>
+        public Dictionary<string, string> RequestHeaders { get; set; }
         public EnvironmentTier? EnvironmentTier { get; set; }
 
         public int InitializeTimeoutMs { get; set; }

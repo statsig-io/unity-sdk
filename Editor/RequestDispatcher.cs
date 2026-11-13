@@ -15,6 +15,104 @@ namespace StatsigUnity
         public string ApiBaseUrl { get; }
         public string LoggingApiBaseUrl { get; }
 
+        private readonly Func<int, Task> _retryDelay = Task.Delay;
+        private readonly string _initializationUrl;
+        private readonly string _eventLoggingUrl;
+        private readonly object _headersLock = new object();
+        private readonly Dictionary<string, string> _requestHeaders =
+            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        internal RequestDispatcher(string key, StatsigOptions options, Func<int, Task> retryDelay = null)
+            : this(key, options.ApiUrlBase, options.ApiUrlBase)
+        {
+            _retryDelay = retryDelay ?? Task.Delay;
+            _initializationUrl = ValidateEndpointUrl(options.InitializationUrl, "InitializationUrl");
+            _eventLoggingUrl = ValidateEndpointUrl(options.EventLoggingUrl, "EventLoggingUrl");
+            if (options.RequestHeaders != null)
+            {
+                foreach (var header in options.RequestHeaders)
+                {
+                    SetRequestHeader(header.Key, header.Value);
+                }
+            }
+        }
+
+        private static string ValidateEndpointUrl(string url, string parameterName)
+        {
+            if (string.IsNullOrEmpty(url))
+            {
+                return null;
+            }
+            Uri parsed;
+            if (!Uri.TryCreate(url, UriKind.Absolute, out parsed) ||
+                (parsed.Scheme != Uri.UriSchemeHttp && parsed.Scheme != Uri.UriSchemeHttps) ||
+                !string.IsNullOrEmpty(parsed.Fragment) || !string.IsNullOrEmpty(parsed.UserInfo))
+            {
+                throw new ArgumentException("Expected an absolute HTTP(S) URL without credentials or a fragment.", parameterName);
+            }
+            return url;
+        }
+
+        private static void ValidateHeaderName(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                throw new ArgumentException("Header name cannot be empty.", "name");
+            }
+            const string punctuation = "!#$%&'*+-.^_`|~";
+            foreach (var ch in name)
+            {
+                if (!((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') ||
+                    (ch >= '0' && ch <= '9') || punctuation.IndexOf(ch) >= 0))
+                {
+                    throw new ArgumentException("Header name must be an HTTP token.", "name");
+                }
+            }
+            if (string.Equals(name, "Content-Type", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(name, "STATSIG-API-KEY", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(name, "STATSIG-CLIENT-TIME", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException("This header is managed by the SDK.", "name");
+            }
+        }
+
+        internal void SetRequestHeader(string name, string value)
+        {
+            ValidateHeaderName(name);
+            if (string.IsNullOrEmpty(value))
+            {
+                throw new ArgumentException("Header value cannot be empty; use RemoveRequestHeader instead.", "value");
+            }
+            foreach (var ch in value)
+            {
+                if (ch < 32 || ch > 126)
+                {
+                    throw new ArgumentException("Header value must contain printable ASCII characters only.", "value");
+                }
+            }
+            lock (_headersLock)
+            {
+                _requestHeaders[name] = value;
+            }
+        }
+
+        internal void RemoveRequestHeader(string name)
+        {
+            ValidateHeaderName(name);
+            lock (_headersLock)
+            {
+                _requestHeaders.Remove(name);
+            }
+        }
+
+        private Dictionary<string, string> GetRequestHeaders()
+        {
+            lock (_headersLock)
+            {
+                return new Dictionary<string, string>(_requestHeaders, StringComparer.OrdinalIgnoreCase);
+            }
+        }
+
         public RequestDispatcher(string key, string apiBaseUrl = null, string loggingApiBaseUrl = null)
         {
             if (string.IsNullOrWhiteSpace(key))
@@ -49,11 +147,14 @@ namespace StatsigUnity
                 {
                     NullValueHandling = NullValueHandling.Ignore
                 };
-                var baseUrl = endpoint.StartsWith("initialize") ? ApiBaseUrl : LoggingApiBaseUrl;
-                var url = baseUrl.EndsWith("/") ? baseUrl + endpoint : baseUrl + "/" + endpoint;
+                var isInitialization = endpoint.StartsWith("initialize");
+                var baseUrl = isInitialization ? ApiBaseUrl : LoggingApiBaseUrl;
+                var url = (isInitialization ? _initializationUrl : _eventLoggingUrl) ??
+                    (baseUrl.EndsWith("/") ? baseUrl + endpoint : baseUrl + "/" + endpoint);
+                var headers = GetRequestHeaders();
                 var json = JsonConvert.SerializeObject(body, Formatting.None, jsonSettings);
 
-                using (var request = UnityWebRequest.Post(url, json, "application/json"))
+                using (var request = new UnityWebRequest(url, "POST"))
                 {
                     var bytes = new System.Text.UTF8Encoding().GetBytes(json);
                     if (request.uploadHandler != null)
@@ -72,6 +173,16 @@ namespace StatsigUnity
                     request.SetRequestHeader("STATSIG-API-KEY", Key);
                     request.SetRequestHeader("STATSIG-CLIENT-TIME",
                         (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalMilliseconds.ToString());
+
+                    // Do not forward proxy credentials through transport-managed redirects.
+                    if (headers.Count > 0)
+                    {
+                        request.redirectLimit = 0;
+                    }
+                    foreach (var header in headers)
+                    {
+                        request.SetRequestHeader(header.Key, header.Value);
+                    }
 
                     request.SendWebRequest();
                     while (!request.isDone)
@@ -104,7 +215,7 @@ namespace StatsigUnity
             int retries = 0,
             int backoff = 1)
         {
-            await Task.Delay(1000 * backoff);
+            await _retryDelay(1000 * backoff);
             return await Fetch(endpoint, body, retries - 1, backoff * backoffMultiplier);
         }
     }

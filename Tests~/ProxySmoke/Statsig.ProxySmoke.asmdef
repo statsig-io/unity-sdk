@@ -1,0 +1,5 @@
+{
+  "name": "Statsig.ProxySmoke",
+  "references": ["StatsigUnity.editor"],
+  "optionalUnityReferences": ["TestAssemblies"]
+}

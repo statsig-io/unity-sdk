@@ -42,11 +42,23 @@ namespace StatsigUnity
 
             _clientKey = clientKey;
             _options = options;
-            _requestDispatcher = new RequestDispatcher(_clientKey, _options.ApiUrlBase, _options.ApiUrlBase);
+            _requestDispatcher = new RequestDispatcher(_clientKey, _options);
             _statsigGameObject = new GameObject("Statsig");
             _eventLogger = _statsigGameObject.AddComponent<EventLogger>();
             _eventLogger.Init(_requestDispatcher, _options);
             UnityEngine.Object.DontDestroyOnLoad(_statsigGameObject);
+        }
+
+        /// <summary>Sets a header for future request attempts, including retries. Names are case-insensitive.</summary>
+        public void SetRequestHeader(string name, string value)
+        {
+            _requestDispatcher.SetRequestHeader(name, value);
+        }
+
+        /// <summary>Removes a custom header from future attempts. An absent header is a no-op.</summary>
+        public void RemoveRequestHeader(string name)
+        {
+            _requestDispatcher.RemoveRequestHeader(name);
         }
 
         public async Task Initialize(StatsigUser user)

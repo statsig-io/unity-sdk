@@ -15,20 +15,28 @@ jobs:
       - name: Get KONG
         run: |
           git clone https://${{ secrets.KONG_FINE_GRAINED_REPO_PAT }}@github.com/statsig-io/kong.git
+          # Includes the matching proxy bridge, regression suite, and fixture exclusion.
+          git -C kong checkout --detach 653b3b6e0218dae51875fecf26786c20de7ad645
 
-      - name: Setup .NET Core SDK
-        uses: actions/setup-dotnet@v2
+      - name: Setup .NET SDKs
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
         with:
-          dotnet-version: "6.x.x"
+          dotnet-version: |
+            6.0.x
+            8.0.x
 
       - name: Install dependencies
         run: |
           cd kong/bridges/unity-server
-          ./pull-and-build-sdk.sh $GITHUB_REPOSITORY $GITHUB_HEAD_REF
+          ./pull-and-build-sdk.sh "$GITHUB_REPOSITORY" "$SDK_REF"
           dotnet restore
           dotnet build
         env:
           repo_pat: ${{ secrets.KONG_FINE_GRAINED_REPO_PAT }}
+          SDK_REF: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Unity proxy regression tests
+        run: dotnet test kong/tests/unity-proxy/UnityProxy.Tests.csproj --configuration Release
 
       - name: Run Tests
         run: |

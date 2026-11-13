@@ -160,6 +160,20 @@ namespace StatsigUnity
             await _client.UpdateUser(user);
         }
 
+        /// <summary>Sets a header for future request attempts on the initialized client.</summary>
+        public static void SetRequestHeader(string name, string value)
+        {
+            EnsureInitialized();
+            _client.SetRequestHeader(name, value);
+        }
+
+        /// <summary>Removes a custom header from future attempts on the initialized client.</summary>
+        public static void RemoveRequestHeader(string name)
+        {
+            EnsureInitialized();
+            _client.RemoveRequestHeader(name);
+        }
+
         static void EnsureInitialized()
         {
             if (_client == null)
